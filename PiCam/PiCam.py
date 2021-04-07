@@ -1,14 +1,32 @@
-from PyQt5.QtWidgets import * 
-from PyQt5.QtGui import * 
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QCheckBox
+from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
-#from time import sleep
-#import keyboard
+from gpiozero import Button
+from pynput.keyboard import Key, Controller
+from time import sleep
+import os
+import datetime
 import sys 
+
 
 #Screen & Preview dimentions in pixels
 wscreen  = 480 #Screen width
 hscreen  = 320 #Screen height
 wpreview = 427 #Preview width
+
+#Output settings
+setting_output_location = "~/Pictures/"
+setting_output_prefix = "Test_"
+setting_output_suffix_noraw = "N"
+setting_output_suffix_raw = "R"
+setting_encoding = "jpg"
+setting_mode = 3
+setting_quality = 90
+setting_thumbnail = "64,48,35"
+
 
 #Default Camera settings
 setting_ISO = 0        #ISO
@@ -17,11 +35,17 @@ setting_SS  = 0        #Shutter Speed
 setting_EXP = "auto"   #Exposure Mode
 setting_EXM = "matrix" #Exposure Metering
 #Default additional settings
-setting_FoM     = True   #Display focus FoM value
+setting_FoM     = False   #Display focus FoM value
 setting_raw     = True   #Add raw Bayer data to JPEG
 setting_flicker = "50hz" #Flicker avoidance
 setting_hf      = False  #Flip Image horizontally
 setting_vf      = False  #Flip Image vertically
+
+#GPIO Buttons
+button_capture = Button(21)
+button_up      = Button(25)
+button_select  = Button(23)
+button_down    = Button(24)
 
 debugging = True #Debugging (print stuff to console)
 
@@ -39,7 +63,7 @@ else:
 ##Debug & Info##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 def print_settings(debug):
     if debug:
-        print("##Picture Settings##")
+        print("##Picture Settings:##")
         if setting_ISO == 0:
             print("ISO: auto")
         else:
@@ -52,7 +76,7 @@ def print_settings(debug):
         print("EXP:", setting_EXP)
         print("EXM:", setting_EXM)
         print("")
-        print("##Additional Settings##")
+        print("##Additional Settings:##")
         print("FoM:         ", setting_FoM)
         print("raw Bayer:   ", setting_raw)
         print("Anti-Flicker:", setting_flicker)
@@ -69,34 +93,55 @@ class Window(QMainWindow):
         #Window properties
         super().__init__()
         self.setWindowTitle("PiCam") 
-        self.setGeometry(0, 0, wscreen, h)
+        self.setGeometry(0, 0, w, h)
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.setWindowFlag(Qt.WindowStaysOnTopHint)
-        self.setStyleSheet("background-color: black;")
         
+        stylesheet = """
+        QWidget {
+        background-color: black;
+        }
+    
+        QPushButton {
+        border: 1px solid gray;
+        color: white;
+        }
+        
+        QPushButton:focus {
+        border: 2px solid gray;
+        color: white;
+        }
+        
+        QCheckBox {
+        border: 1px solid gray;
+        color: white;
+        }
+        
+        QCheckBox:focus {
+        border: 2px solid gray;
+        color: white;
+        }
+        
+        QCheckBox::indicator {
+        width: 15px;
+        height: 15px;
+        }
+        """
+
+        self.setStyleSheet(stylesheet)
+        
+    
     #Create Button
     def button(self, x, y, w, h, Label, font_size, Command, visibility):
         button = QPushButton(Label, self)
         button.move(x, y)
         button.resize(w, h)
         button.clicked.connect(Command)
-        button.setStyleSheet("border: 1px solid gray;" "color: white;")
         button.setFont(QFont("Arial", font_size))
         if not visibility:
             button.hide()
+            
         return button
-        
-    #Create Label
-    #def label(self, x, y, w, h, Label, visibility):
-        #label = QLabel(self)
-        #label.move(x, y)
-        #label.resize(w, 20)
-        #label.setText(Label)
-        #label.setAlignment(Qt.AlignCenter)
-        #label.setStyleSheet("border: 1px solid gray;" "color: white;")
-        #if not visibility:
-            #label.hide()
-        #return label
     
     #Create CheckBox
     def checkbox(self, x, y, w, h, Label, font_size, State, Command, visibility):
@@ -105,27 +150,11 @@ class Window(QMainWindow):
         checkbox.resize(w, h)
         checkbox.setChecked(State)
         checkbox.stateChanged.connect(Command)
-        checkbox.setStyleSheet("border: 1px solid gray;" "color: white;")
         checkbox.setFont(QFont("Arial", font_size))
         if not visibility:
             checkbox.hide()
+            
         return checkbox
-
-    #Create Slider
-    #def slider(selfvmin, vmax, Interval, Step ,Value, Command, visibility):
-        #slider = QSlider(Qt.Vertical, self)
-        #slider.move(x, y)
-        #slider.resize(w, h)
-        #slider.setMinimum(vmin)
-        #slider.setMaximum(vmax)
-        #slider.setValue(Value)
-        #slider.setTickPosition(QSlider.TicksBothSides)
-        #slider.setTickInterval(Interval)
-        #slider.setSingleStep(Step)
-        #slider.valueChanged.connect(Command)
-        #if not visibility:
-            #slider.hide()
-        #return slider
 
 
 ##Create window##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -134,11 +163,6 @@ Menu = Window()
 
 
 ##Button pressed actions##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#Button action Preview
-def button_preview_pressed():
-    pass
-
-
 #Button action Main Menu
 def button_ISO_pressed():
     visibility_Menu(False)
@@ -174,6 +198,7 @@ def button_ISO_640_pressed():
     button_ISO_any_act(640)
 def button_ISO_800_pressed():
     button_ISO_any_act(800)
+    
 def button_ISO_any_act(value): #act function
     global setting_ISO
     setting_ISO = value
@@ -185,9 +210,9 @@ def button_ISO_any_act(value): #act function
 def button_AWB_auto_pressed():
     button_AWB_any_act("auto")
 def button_AWB_sunlight_pressed():
-    button_AWB_any_act("sunlight")
+    button_AWB_any_act("sun")
 def button_AWB_cloudy_pressed():
-    button_AWB_any_act("cloudy")
+    button_AWB_any_act("cloud")
 def button_AWB_shade_pressed():
     button_AWB_any_act("shade")
 def button_AWB_tungsten_pressed():
@@ -200,6 +225,7 @@ def button_AWB_flash_pressed():
     button_AWB_any_act("flash")
 def button_AWB_horizon_pressed():
     button_AWB_any_act("horizon")
+    
 def button_AWB_any_act(mode): #act function
     global setting_AWB
     setting_AWB = mode
@@ -270,6 +296,7 @@ def button_SS_500_pressed():
 def button_SS_DOWN_3_pressed(): #DOWN
     visibility_Menu_SS_3(False)
     visibility_Menu_SS_1(True)
+    
 def button_SS_any_act(menu, value): #act function
     global setting_SS
     setting_SS = value
@@ -318,6 +345,7 @@ def button_EXP_fireworks_pressed():
     button_EXP_any_act("fireworks")
 def button_EXP_antishake_pressed():
     button_EXP_any_act("antishake")
+    
 def button_EXP_any_act(mode): #act function
     global setting_EXP
     setting_EXP = mode
@@ -328,23 +356,29 @@ def button_EXP_any_act(mode): #act function
 #Button action ETC Menu
 def button_ETC_PIC_pressed():
     visibility_Menu_ETC(False)
+    feh()
     visibility_Menu_PIC(True)
 def button_ETC_BACK_pressed():
     visibility_Menu_ETC(False)
     visibility_Menu(True)
 #Button action PIC Menu
 def button_PIC_next_pressed():
-    pass
+    QPushButton_PIC_next_pressed()
+    Menu.activateWindow()
 def button_PIC_prev_pressed():
-    pass
-def button_PIC_rotate_pressed():
-    pass
-def button_PIC_save_pressed():
-    pass
+    QPushButton_PIC_prev_pressed()
+    Menu.activateWindow()
+def button_PIC_rotr_pressed():
+    QPushButton_PIC_rotr_pressed()
+    Menu.activateWindow()
+def button_PIC_rotl_pressed():
+    QPushButton_PIC_rotl_pressed()
+    Menu.activateWindow()
 def button_PIC_BAK_pressed():
     visibility_Menu_PIC(False)
+    raspistill()
     visibility_Menu(True)
-
+    
 
 ##CheckBox checked actions##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 #CheckBox action ETC FoM
@@ -373,10 +407,6 @@ def checkbox_ETC_vf_pressed():
     setting_vf = not setting_vf
 
 
-##Create Preview button##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#button_preview = Menu.button(w, 0, wpreview, h, "", 12, button_preview_pressed, True)
-
-
 ##Create menu##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 xdist = 5
 ydist = 20
@@ -388,7 +418,7 @@ button_ISO = Menu.button(xdist, ydist + button_dist*0, button_w, button_h, "ISO"
 button_AWB = Menu.button(xdist, ydist + button_dist*1, button_w, button_h, "AWB", 12, button_AWB_pressed, True)
 button_SS  = Menu.button(xdist, ydist + button_dist*2, button_w, button_h,  "SS", 12,  button_SS_pressed, True)
 button_EXP = Menu.button(xdist, ydist + button_dist*3, button_w, button_h, "EXP", 12, button_EXP_pressed, True)
-button_ETC = Menu.button(xdist,  h - ydist - button_h, button_w, button_h, "✱", 16, button_ETC_pressed, True)
+button_ETC = Menu.button(xdist,  h - ydist - button_h, button_w, button_h,   "⚙", 20, button_ETC_pressed, True)
 #Change visibility of Main Menu
 def visibility_Menu(visibility):
     if visibility:
@@ -397,8 +427,9 @@ def visibility_Menu(visibility):
         button_SS.show()
         button_EXP.show()
         button_ETC.show()
-        print_settings(debugging) #Print changed settings to console
         button_ISO.setFocus() #Set Focus
+        print_settings(debugging) #Print changed settings to console
+        raspistill() #Refresh preview
     else:
         button_ISO.hide()
         button_AWB.hide()
@@ -447,14 +478,14 @@ button_AWB_h = h/12
 button_AWB_dist = (h - 2*ydist - button_AWB_h)/8
 #Create buttons for AWB Menu
 button_AWB_auto         = Menu.button(xdist, ydist + button_AWB_dist*0, button_w, button_AWB_h, "AUTO", 10, button_AWB_auto_pressed,         False)
-button_AWB_sunlight     = Menu.button(xdist, ydist + button_AWB_dist*1, button_w, button_AWB_h,   "☀", 16, button_AWB_sunlight_pressed,     False)
-button_AWB_cloudy       = Menu.button(xdist, ydist + button_AWB_dist*2, button_w, button_AWB_h,   "☁", 16, button_AWB_cloudy_pressed,       False)
-button_AWB_shade        = Menu.button(xdist, ydist + button_AWB_dist*3, button_w, button_AWB_h,   "░░", 12, button_AWB_shade_pressed,        False)
-button_AWB_tungsten     = Menu.button(xdist, ydist + button_AWB_dist*4, button_w, button_AWB_h,  " T💡", 12, button_AWB_tungsten_pressed,     False)
-button_AWB_fluorescent  = Menu.button(xdist, ydist + button_AWB_dist*5, button_w, button_AWB_h,  " F💡", 12, button_AWB_fluorescent_pressed,  False)
-button_AWB_incandescent = Menu.button(xdist, ydist + button_AWB_dist*6, button_w, button_AWB_h,  " I💡", 12, button_AWB_incandescent_pressed, False)
-button_AWB_flash        = Menu.button(xdist, ydist + button_AWB_dist*7, button_w, button_AWB_h,    "ϟ", 16, button_AWB_flash_pressed,        False)
-button_AWB_horizon      = Menu.button(xdist, ydist + button_AWB_dist*8, button_w, button_AWB_h,    "≐", 24, button_AWB_horizon_pressed,      False)
+button_AWB_sunlight     = Menu.button(xdist, ydist + button_AWB_dist*1, button_w, button_AWB_h,    "☀", 16, button_AWB_sunlight_pressed,     False)
+button_AWB_cloudy       = Menu.button(xdist, ydist + button_AWB_dist*2, button_w, button_AWB_h,    "☁", 16, button_AWB_cloudy_pressed,       False)
+button_AWB_shade        = Menu.button(xdist, ydist + button_AWB_dist*3, button_w, button_AWB_h,    "▧", 14, button_AWB_shade_pressed,        False)
+button_AWB_tungsten     = Menu.button(xdist, ydist + button_AWB_dist*4, button_w, button_AWB_h,    "W", 12, button_AWB_tungsten_pressed,     False)
+button_AWB_fluorescent  = Menu.button(xdist, ydist + button_AWB_dist*5, button_w, button_AWB_h,    "F", 12, button_AWB_fluorescent_pressed,  False)
+button_AWB_incandescent = Menu.button(xdist, ydist + button_AWB_dist*6, button_w, button_AWB_h,    "I", 12, button_AWB_incandescent_pressed, False)
+button_AWB_flash        = Menu.button(xdist, ydist + button_AWB_dist*7, button_w, button_AWB_h,    "⚡", 16, button_AWB_flash_pressed,        False)
+button_AWB_horizon      = Menu.button(xdist, ydist + button_AWB_dist*8, button_w, button_AWB_h,    "♎", 16, button_AWB_horizon_pressed,      False)
 #Change visibility of AWB Menu
 def visibility_Menu_AWB(visibility):
     if visibility:
@@ -590,21 +621,21 @@ button_EXM_dist = button_EXM_h + h/24
 button_EXP_h = h/12
 button_EXP_dist = (h - 2*ydist - button_EXP_h)/8
 #Create buttons for EXP (Metering) Menu
-button_EXM_average   = Menu.button(xdist, ydist + button_EXM_dist*0, button_w, button_EXM_h,    "∅", 26, button_EXM_average_pressed,   False)
-button_EXM_matrix    = Menu.button(xdist, ydist + button_EXM_dist*1, button_w, button_EXM_h,    "◯", 20, button_EXM_matrix_pressed,    False)
-button_EXM_spot      = Menu.button(xdist, ydist + button_EXM_dist*2, button_w, button_EXM_h,     "◯", 6, button_EXM_spot_pressed,      False)
-button_EXM_backlit   = Menu.button(xdist, ydist + button_EXM_dist*3, button_w, button_EXM_h,    "☄", 20, button_EXM_backlit_pressed,   False)
+button_EXM_average   = Menu.button(xdist, ydist + button_EXM_dist*0, button_w, button_EXM_h,    "∅", 22, button_EXM_average_pressed,   False)
+button_EXM_matrix    = Menu.button(xdist, ydist + button_EXM_dist*1, button_w, button_EXM_h,    "◯", 16, button_EXM_matrix_pressed,    False)
+button_EXM_spot      = Menu.button(xdist, ydist + button_EXM_dist*2, button_w, button_EXM_h,     "·", 18, button_EXM_spot_pressed,      False)
+button_EXM_backlit   = Menu.button(xdist, ydist + button_EXM_dist*3, button_w, button_EXM_h,    "⚞I", 18, button_EXM_backlit_pressed,   False)
 button_EXP_mode      = Menu.button(xdist,  h - ydist - button_EXM_h, button_w, button_EXM_h,  "MODE", 10, button_EXP_mode_pressed,      False)
 #Create buttons for EXP Mode Menu (nested)
 button_EXP_auto      = Menu.button(xdist, ydist + button_EXP_dist*0, button_w, button_EXP_h,  "AUTO", 10, button_EXP_auto_pressed,      False)
-button_EXP_night     = Menu.button(xdist, ydist + button_EXP_dist*1, button_w, button_EXP_h, "NIGHT", 10, button_EXP_night_pressed,     False)
-button_EXP_backlight = Menu.button(xdist, ydist + button_EXP_dist*2, button_w, button_EXP_h,    "BL", 12, button_EXP_backlight_pressed, False)
-button_EXP_spotlight = Menu.button(xdist, ydist + button_EXP_dist*3, button_w, button_EXP_h,    "SL", 12, button_EXP_spotlight_pressed, False)
-button_EXP_sports    = Menu.button(xdist, ydist + button_EXP_dist*4, button_w, button_EXP_h, "SPORT",  8, button_EXP_sports_pressed,    False)
-button_EXP_snow      = Menu.button(xdist, ydist + button_EXP_dist*5, button_w, button_EXP_h,  "SNOW",  8, button_EXP_snow_pressed,      False)
-button_EXP_beach     = Menu.button(xdist, ydist + button_EXP_dist*6, button_w, button_EXP_h, "BEACH",  8, button_EXP_beach_pressed,     False)
-button_EXP_fireworks = Menu.button(xdist, ydist + button_EXP_dist*7, button_w, button_EXP_h, "FWORK",  8, button_EXP_fireworks_pressed, False)
-button_EXP_antishake = Menu.button(xdist, ydist + button_EXP_dist*8, button_w, button_EXP_h, "SHAKE",  8, button_EXP_antishake_pressed, False)
+button_EXP_night     = Menu.button(xdist, ydist + button_EXP_dist*1, button_w, button_EXP_h, " ☾", 16, button_EXP_night_pressed,     False)
+button_EXP_backlight = Menu.button(xdist, ydist + button_EXP_dist*2, button_w, button_EXP_h,    "⚞I", 12, button_EXP_backlight_pressed, False)
+button_EXP_spotlight = Menu.button(xdist, ydist + button_EXP_dist*3, button_w, button_EXP_h,    "☄", 16, button_EXP_spotlight_pressed, False)
+button_EXP_sports    = Menu.button(xdist, ydist + button_EXP_dist*4, button_w, button_EXP_h, "☡",  14, button_EXP_sports_pressed,    False)
+button_EXP_snow      = Menu.button(xdist, ydist + button_EXP_dist*5, button_w, button_EXP_h,  "☃",  18, button_EXP_snow_pressed,      False)
+button_EXP_beach     = Menu.button(xdist, ydist + button_EXP_dist*6, button_w, button_EXP_h, "≃",  16, button_EXP_beach_pressed,     False)
+button_EXP_fireworks = Menu.button(xdist, ydist + button_EXP_dist*7, button_w, button_EXP_h, "≛",  16, button_EXP_fireworks_pressed, False)
+button_EXP_antishake = Menu.button(xdist, ydist + button_EXP_dist*8, button_w, button_EXP_h, "░▒▓",  8, button_EXP_antishake_pressed, False)
 #Change visibility of EXP Menu
 def visibility_Menu_EXP(visibility):
     if visibility:
@@ -651,11 +682,11 @@ checkbox_h = h/12
 checkbox_ETC_dist = checkbox_h + h/50
 button_ETC_h = h/8
 button_ETC_dist = button_ETC_h + h/24
-checkbox_ETC_FoM     = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*0, checkbox_w, checkbox_h, "FoM", 8, setting_FoM,               checkbox_ETC_FoM_pressed,     False)
-checkbox_ETC_raw     = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*1, checkbox_w, checkbox_h, "RAW", 7, setting_raw,               checkbox_ETC_raw_pressed,     False)
-checkbox_ETC_flicker = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*2, checkbox_w, checkbox_h, "Hz", 12, setting_flicker_init_bool, checkbox_ETC_flicker_pressed, False)
-checkbox_ETC_hf      = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*3, checkbox_w, checkbox_h, "HF", 12, setting_hf,                checkbox_ETC_hf_pressed,      False)
-checkbox_ETC_vf      = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*4, checkbox_w, checkbox_h, "VF", 12, setting_vf,                checkbox_ETC_vf_pressed,      False)
+checkbox_ETC_FoM     = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*0, checkbox_w, checkbox_h, "FoM", 6, setting_FoM,               checkbox_ETC_FoM_pressed,     False)
+checkbox_ETC_raw     = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*1, checkbox_w, checkbox_h, "RAW", 5, setting_raw,               checkbox_ETC_raw_pressed,     False)
+checkbox_ETC_flicker = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*2, checkbox_w, checkbox_h, "Hz", 8, setting_flicker_init_bool, checkbox_ETC_flicker_pressed, False)
+checkbox_ETC_hf      = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*3, checkbox_w, checkbox_h, "HF", 8, setting_hf,                checkbox_ETC_hf_pressed,      False)
+checkbox_ETC_vf      = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*4, checkbox_w, checkbox_h, "VF", 8, setting_vf,                checkbox_ETC_vf_pressed,      False)
 button_ETC_PIC       = Menu.button(xdist, h - ydist - button_ETC_h - button_ETC_dist*1, button_w, button_ETC_h, "PIC", 12, button_ETC_PIC_pressed,  False)
 button_ETC_BACK      = Menu.button(xdist, h - ydist - button_ETC_h - button_ETC_dist*0, button_w, button_ETC_h,   "↩", 24, button_ETC_BACK_pressed, False)
 #Change visibility of ETC Menu
@@ -683,28 +714,189 @@ def visibility_Menu_ETC(visibility):
 button_PIC_h = h/8
 button_PIC_dist = button_PIC_h + h/24
 #Create buttons for PIC (Metering) Menu
-button_PIC_next   = Menu.button(xdist, ydist + button_PIC_dist*0, button_w, button_PIC_h,  "►", 12, button_PIC_next_pressed,   False)
-button_PIC_prev   = Menu.button(xdist, ydist + button_PIC_dist*1, button_w, button_PIC_h,  "◄", 12, button_PIC_prev_pressed,   False)
-button_PIC_rotate = Menu.button(xdist, ydist + button_PIC_dist*2, button_w, button_PIC_h,  "↻", 20, button_PIC_rotate_pressed, False)
-button_PIC_save   = Menu.button(xdist, ydist + button_PIC_dist*3, button_w, button_PIC_h, "✓", 20, button_PIC_save_pressed,   False)
-button_PIC_BAK    = Menu.button(xdist,  h - ydist - button_PIC_h, button_w, button_PIC_h,  "↩", 24, button_PIC_BAK_pressed,    False)
+button_PIC_next = Menu.button(xdist, ydist + button_PIC_dist*0, button_w, button_PIC_h, "►", 12, button_PIC_next_pressed,   False)
+button_PIC_prev = Menu.button(xdist, ydist + button_PIC_dist*1, button_w, button_PIC_h, "◄", 12, button_PIC_prev_pressed,   False)
+button_PIC_rotr = Menu.button(xdist, ydist + button_PIC_dist*2, button_w, button_PIC_h, "↻", 20, button_PIC_rotr_pressed,   False)
+button_PIC_rotl = Menu.button(xdist, ydist + button_PIC_dist*3, button_w, button_PIC_h, "↺", 20, button_PIC_rotl_pressed,   False)
+button_PIC_BAK  = Menu.button(xdist,  h - ydist - button_PIC_h, button_w, button_PIC_h, "↩", 24, button_PIC_BAK_pressed,    False)
 #Change visibility of PIC Menu
 def visibility_Menu_PIC(visibility):
     if visibility:
         button_PIC_next.show()
         button_PIC_prev.show()
-        button_PIC_rotate.show()
-        button_PIC_save.show()
+        button_PIC_rotr.show()
+        button_PIC_rotl.show()
         button_PIC_BAK.show()
         button_PIC_next.setFocus() #Set Focus
     else:
         button_PIC_next.hide()
         button_PIC_prev.hide()
-        button_PIC_rotate.hide()
-        button_PIC_save.hide()
+        button_PIC_rotr.hide()
+        button_PIC_rotl.hide()
         button_PIC_BAK.hide()
 
 
+##CAMERA##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#Make raspistill command
+def raspistill_command():
+    #Output
+    year = datetime.date.today().year
+    month = datetime.date.today().month
+    if month < 10:
+        arg_output_prefix = setting_output_prefix + str(year) + "0"
+    else:
+        arg_output_prefix = setting_output_prefix + str(year)
+    if setting_raw:
+        arg_output_suffix = setting_output_suffix_raw
+    else:
+        arg_output_suffix = setting_output_suffix_noraw
+    
+    #Arguments
+    arg_needed = "-t 0 -dt -s "
+    
+    arg_preview   = "-p "  + str(w) + ",0," + str(wpreview) + "," + str(h) + " "
+    arg_output    = "-o "  + setting_output_location + arg_output_prefix + "%d" + arg_output_suffix + "." + setting_encoding + " "
+    arg_encoding  = "-e "  + setting_encoding     + " "
+    arg_mode      = "-md " + str(setting_mode)    + " "
+    arg_quality   = "-q "  + str(setting_quality) + " "
+    arg_thumbnail = "-th " + setting_thumbnail    + " "
+    
+    arg_ISO = "-ISO " + str(setting_ISO) + " "
+    arg_AWB = "-awb " + str(setting_AWB) + " "
+    arg_SS  = "-ss "  + str(setting_SS)  + " "
+    arg_EXP = "-ex "  + str(setting_EXP) + " "
+    arg_EXM = "-mm "  + str(setting_EXM) + " "
+    
+    arg_FoM     = "-fw "
+    arg_raw     = "-r "
+    arg_flicker = "-fli " + str(setting_flicker) + " "
+    arg_hf      = "-hf "
+    arg_vf      = "-vf "
+    
+    
+    #Make Command
+    command  = "raspistill "
+    command += arg_needed
+    command += arg_preview
+    command += arg_output
+    command += arg_encoding
+    command += arg_mode
+    command += arg_quality
+    command += arg_thumbnail
+    command += arg_ISO
+    command += arg_AWB
+    command += arg_SS
+    command += arg_EXP
+    command += arg_EXM
+    if setting_FoM:
+        command += arg_FoM
+    if setting_raw:
+        command += arg_raw
+    command += arg_flicker
+    if setting_hf:
+        command += arg_hf
+    if setting_vf:
+        command += arg_vf
+    #Debugging message
+    if debugging:
+        print("##raspistill command:##")
+        print(command)
+        print("")
+        
+    return command + "&"
+
+#Launch (or) relaunch raspistill. Needs to be run each time camera settings change
+def raspistill():
+    os.system("pkill feh")
+    os.system("pkill raspistill")
+    raspistill = raspistill_command()
+    os.system(raspistill)
+
+#capture image
+def capture():
+    os.system("pkill -USR1 raspistill")
+    #Debugging message
+    if debugging:
+        print("Image captured")
+
+
+##Image viever##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#Make feh command
+def feh_command():
+    arg_path = setting_output_location + " "
+    arg_geometry = "-x -g " + str(wpreview) + "x" + str(h) + "+" + str(w) + "+0 -. "
+    arg_needed = "-n -d -B black --edit "
+    
+    command  = "feh "
+    command += arg_path
+    command += arg_geometry
+    command += arg_needed
+    #Debugging message
+    if debugging:
+        print("##feh command:##")
+        print(command)
+        print("")
+    
+    return command + "&"
+
+
+def feh():
+    os.system("pkill raspistill")
+    feh = feh_command()
+    os.system(feh)
+    sleep(1.5)#Increrase if feh takes long to open
+    Menu.activateWindow()
+
+
+##GPIO & Keys##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+keyboard = Controller()
+#Shoot picture button
+def gpio_button_capture_pressed():
+    capture()
+#Simulate the correct Keypresses from GPIO
+def gpio_button_up_pressed():
+    keyboard.press(Key.up)
+    keyboard.release(Key.up)
+def gpio_button_select_pressed():
+    keyboard.press(Key.space)
+    keyboard.release(Key.space)
+def gpio_button_down_pressed():
+    keyboard.press(Key.down)
+    keyboard.release(Key.down)
+
+#Test for GPIO button presses
+button_capture.when_pressed = gpio_button_capture_pressed
+button_up.when_pressed      = gpio_button_up_pressed
+button_select.when_pressed  = gpio_button_select_pressed
+button_down.when_pressed    = gpio_button_down_pressed
+
+#Simulate Keypress from QPushButton
+def alt_tab():
+    alt_tab_delay = 0.5
+    keyboard.press(Key.alt)
+    keyboard.press(Key.tab)
+    keyboard.release(Key.tab)
+    keyboard.release(Key.alt)
+    sleep(alt_tab_delay)
+def QPushButton_PIC_next_pressed():
+    alt_tab()
+    keyboard.press(Key.right)
+    keyboard.release(Key.right)
+def QPushButton_PIC_prev_pressed():
+    alt_tab()
+    keyboard.press(Key.left)
+    keyboard.release(Key.left)
+def QPushButton_PIC_rotr_pressed():
+    alt_tab()
+    keyboard.press(">")
+    keyboard.release(">")
+def QPushButton_PIC_rotl_pressed():
+    alt_tab()
+    keyboard.press("<")
+    keyboard.release("<")
+
+
 ##Run App##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-Menu.show()
-sys.exit(App.exec())
+raspistill() #Preview
+Menu.show()  #show UI
+App.exec()   #Run UI
