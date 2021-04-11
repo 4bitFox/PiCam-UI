@@ -8,7 +8,7 @@
 #Basic Camera UI for the Raspberry Pi.
 #I wrote it for the Raspberry Pi HQ Camera on a Rasberry Pi 4B, with a small LCD on top.
 #If you use a different camera module you will have to adjust some settings (e.g. the Sensor Mode). Same when you use a different res display ect...
-#I'm new to programming, so the code could probably be better and some things are hacky. It works fine for what I want to use it for tough.
+#I'm new to programming, so the code could probably be better and some things are hacky (Filename-date, simulated keypresses and image viewing with feh). It works fine for what I want to use it for tough.
 
 #This script requires "qt5-default" and "feh" to be installed!
 #You also need to have these libraries installed (PyQt5, qpiozero, pynput):
@@ -748,7 +748,7 @@ def visibility_Menu_EXP(visibility):
         button_EXM_spot.show()
         button_EXM_backlit.show()
         button_EXP_mode.show()
-        button_EXM_average.setFocus() #Set Focus
+        button_EXM_matrix.setFocus() #Set Focus
     else:
         button_EXM_average.hide()
         button_EXM_matrix.hide()
@@ -788,9 +788,9 @@ button_ETC_h = h/8
 button_ETC_dist = button_ETC_h + h/24
 checkbox_ETC_FoM     = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*0, checkbox_w, checkbox_h, "FoM", 10, setting_FoM,               checkbox_ETC_FoM_pressed,     False)
 checkbox_ETC_raw     = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*1, checkbox_w, checkbox_h, "RAW", 10, setting_raw,               checkbox_ETC_raw_pressed,     False)
-checkbox_ETC_flicker = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*2, checkbox_w, checkbox_h, " Hz", 12, setting_flicker_init_bool, checkbox_ETC_flicker_pressed, False)
-checkbox_ETC_hf      = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*3, checkbox_w, checkbox_h, " HF", 12, setting_hf,                checkbox_ETC_hf_pressed,      False)
-checkbox_ETC_vf      = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*4, checkbox_w, checkbox_h, " VF", 12, setting_vf,                checkbox_ETC_vf_pressed,      False)
+checkbox_ETC_flicker = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*2, checkbox_w, checkbox_h,  "Hz", 12, setting_flicker_init_bool, checkbox_ETC_flicker_pressed, False)
+checkbox_ETC_hf      = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*3, checkbox_w, checkbox_h,  "HF", 12, setting_hf,                checkbox_ETC_hf_pressed,      False)
+checkbox_ETC_vf      = Menu.checkbox(xdist, ydist + checkbox_ETC_dist*4, checkbox_w, checkbox_h,  "VF", 12, setting_vf,                checkbox_ETC_vf_pressed,      False)
 button_ETC_PIC       = Menu.button(xdist, h - ydist - button_ETC_h - button_ETC_dist*1, button_w, button_ETC_h, "PIC", 12, button_ETC_PIC_pressed,  False)
 button_ETC_BACK      = Menu.button(xdist, h - ydist - button_ETC_h - button_ETC_dist*0, button_w, button_ETC_h,   "↩", 24, button_ETC_BACK_pressed, False)
 #Change visibility of ETC Menu
@@ -930,7 +930,7 @@ def capture():
 def feh_command():
     arg_path = setting_output_location + " "
     arg_geometry = "-x -g " + str(wpreview) + "x" + str(h) + "+" + str(w) + "+0 -. "
-    arg_needed = "-n -d -B black --edit "
+    arg_needed = "-n -d -B black -N --edit "
     
     command  = "feh "
     command += arg_path
