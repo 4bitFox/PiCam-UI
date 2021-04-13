@@ -5,13 +5,13 @@
 ###  Copyright (C) 2021 4bitFox  ###
 
 
-#Basic Camera UI for the Raspberry Pi.
+#Basic portable Camera UI for the Raspberry Pi.
 #I wrote it for the Raspberry Pi HQ Camera on a Rasberry Pi 4B, with a small LCD on top.
 #If you use a different camera module you will have to adjust some settings (e.g. the Sensor Mode). Same when you use a different res display ect...
 #I'm new to programming, so the code could probably be better and some things are hacky (Filename-date, simulated keypresses and image viewing with feh). It works fine for what I want to use it for tough.
 
 #This script requires "qt5-default" and "feh" to be installed!
-#You also need to have these libraries installed (PyQt5, qpiozero, pynput):
+#You also need to have these python libraries installed (PyQt5, qpiozero, pynput):
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QCheckBox
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
@@ -69,8 +69,8 @@ button_select  = Button(23) #Select in menu
 button_down    = Button(24) #Move down in menu
 
 #Other
-style = "line" #How the UI looks. You can use "boxes" or "lines"
-debugging = True #Debugging (print stuff to console)
+style = "line" #How the UI looks. You can use "boxes" or "line"
+debugging = False #Debugging (print stuff to console)
 
 
 ### The "real" code beginns here :) ###
@@ -141,6 +141,10 @@ class Window(QMainWindow):
             QPushButton:focus {
             border: 2px solid gray;
             }
+            
+            QPushButton:hover {
+            border: 2px solid gray;
+            }
         
             QPushButton:pressed {
             background-color: gray;
@@ -152,6 +156,10 @@ class Window(QMainWindow):
             }
         
             QCheckBox:focus {
+            border: 2px solid gray;
+            }
+            
+            QCheckBox:hover {
             border: 2px solid gray;
             }
         
@@ -193,6 +201,11 @@ class Window(QMainWindow):
             border: 4px solid;
             border-left-color: white;
             }
+            
+            QPushButton:hover {
+            border: 4px solid;
+            border-left-color: gray;
+            }
         
             QPushButton:pressed {
             border: 3px solid;
@@ -211,6 +224,11 @@ class Window(QMainWindow):
             QCheckBox:focus {
             border: 4px solid;
             border-left-color: white;
+            }
+            
+            QCheckBox:hover {
+            border: 4px solid;
+            border-left-color: gray;
             }
         
             QCheckBox:pressed {
@@ -818,7 +836,7 @@ def raspistill_command():
 def raspistill():
     os.system("pkill feh")
     os.system("pkill raspistill")
-    Menu.setGeometry(0, 0, wscreen, h)
+    Menu.resize(wscreen, h)
     raspistill = raspistill_command()
     os.system(raspistill)
 
@@ -855,7 +873,7 @@ def feh():
     feh = feh_command()
     os.system(feh)
     sleep(2)#Increrase if feh takes long to open
-    Menu.setGeometry(0, 0, w, h)
+    Menu.resize(w, h)
     Menu.activateWindow()
 
 
@@ -884,7 +902,7 @@ button_down.when_pressed    = gpio_button_down_pressed
 
 #Simulate Keypress from QPushButton
 def simulate_alt_tab(): #Dirty workaround :)
-    alt_tab_delay = 0.5
+    alt_tab_delay = 0.2
     keyboard.press(Key.alt)
     keyboard.press(Key.tab)
     keyboard.release(Key.tab)
