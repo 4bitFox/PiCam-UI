@@ -10,7 +10,7 @@
 #If you use a different camera module you will have to adjust some settings (e.g. the Sensor Mode). Same when you use a different res display ect...
 #I'm new to programming, so the code could probably be better and some things are hacky (Filename-date, simulated keypresses and image viewing with feh). It works fine for what I want to use it for tough.
 
-#This script requires "feh" to be installed (sudo apt install feh).
+#This script requires "feh" for image viewing to be installed (sudo apt install feh).
 #You also need to have the python3 library "pynput" installed (pip3 install pynput).
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QCheckBox, QLabel
 from PyQt5.QtGui import QFont
@@ -18,6 +18,7 @@ from PyQt5.QtCore import Qt
 from gpiozero import Button
 from pynput.keyboard import Key, Controller
 from time import sleep
+from threading import Timer
 import os
 import datetime
 import sys 
@@ -60,6 +61,12 @@ setting_raw     = False   #Add raw Bayer data to JPEG
 setting_flicker = "50hz" #Flicker avoidance
 setting_hf      = False  #Flip Image horizontally
 setting_vf      = False  #Flip Image vertically
+#Default advanced settings
+setting_USB  = True
+setting_HDMI = True
+setting_WiFi = True
+setting_SSH  = True
+setting_VNC  = True
 
 
 #GPIO Buttons
@@ -69,13 +76,16 @@ button_up      = Button(25) #Move up in menu
 button_select  = Button(23) #Select in menu
 button_down    = Button(24) #Move down in menu
 
+#Hardware
+battery_hat = True #Enable battery. You have change the "battery()" function yourself if you use a different HAT than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
+
 #Other
 style = "line" #How the UI looks. You can use "boxes" or "line"
-debugging = False #Debugging (print stuff to console)
+debugging = True #Debugging (print stuff to console)
 
 
 ### The "real" code beginns here :) ###
-##Shorten common Variables, Save initial setting & other stuff##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+##Shorten common Variables, Save and apply initial settings & other stuff##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 w = wscreen - wpreview - winfo #Empty space left for the buttons
 h = hscreen
 
@@ -140,6 +150,66 @@ def setting_SS_hr():
     else:
         SS = "?"
     return SS
+    
+def setting_USB_set(state):
+    if state:
+        os.system("echo 1-1 | sudo tee /sys/bus/usb/drivers/usb/bind > /dev/null 2>&1")
+        if debugging:
+            print("USB enabled")
+    else:
+        os.system("echo 1-1 | sudo tee /sys/bus/usb/drivers/usb/unbind > /dev/null 2>&1")
+        if debugging:
+            print("USB disabled")
+
+setting_USB_set(setting_USB)
+
+def setting_HDMI_set(state):
+    if state:
+        os.system("sudo /opt/vc/bin/tvservice -p > /dev/null")
+        if debugging:
+            print("HDMI enabled")
+    else:
+        os.system("sudo /opt/vc/bin/tvservice -o > /dev/null")
+        if debugging:
+            print("HDMI disabled")
+
+setting_HDMI_set(setting_HDMI)
+
+def setting_WiFi_set(state):
+    if state:
+        os.system("sudo ifconfig wlan0 up")
+        if debugging:
+            print("WiFi enabled")
+    else:
+        os.system("sudo ifconfig wlan0 down")
+        if debugging:
+            print("WiFi disabled")
+
+setting_WiFi_set(setting_WiFi)
+
+def setting_SSH_set(state):
+    if state:
+        os.system("sudo systemctl start --now ssh.service")
+        if debugging:
+            print("SSH enabled")
+    else:
+        os.system("sudo systemctl stop --now ssh.service")
+        if debugging:
+            print("SSH disabled")
+
+setting_SSH_set(setting_SSH)
+
+def setting_VNC_set(state):
+    if state:
+        os.system("sudo systemctl start --now vncserver-x11-serviced.service")
+        if debugging:
+            print("VNC enabled")
+    else:
+        os.system("sudo systemctl stop --now vncserver-x11-serviced.service")
+        if debugging:
+            print("VNC disabled")
+
+setting_VNC_set(setting_VNC)
 
 def fs_stat(output):
     statvfs = os.statvfs(setting_output_location)
@@ -162,17 +232,25 @@ def fs_stat(output):
         available_TiB = round(available / 1099511627776)
         available_GiB = round(available / 1073742000)
         available_MiB = round(available / 1048576)
-    if available_TiB >= 1:
-        available = str(available_TiB) + "TiB"
-        return available
-    elif available_GiB >= 1:
-        available = str(available_GiB) + "GiB"
-        return available
+        if available_TiB >= 1:
+            available = str(available_TiB) + "TiB"
+            return available
+        elif available_GiB >= 1:
+            available = str(available_GiB) + "GiB"
+            return available
+        else:
+            available = str(available_MiB) + "GiB"
+            return available
+
+def battery():
+    if battery_hat:
+        battery = os.popen("echo -n get battery | netcat -q 0 127.0.0.1 8423 | sed s/[^0-9.]*//g").read()
+        battery = battery.split(".")[0] + "%"
+        return battery
     else:
-        available = str(available_MiB) + "GiB"
-        return available
-
-
+        return "N/A"
+        
+        
 ##Debug & Info##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 def print_settings(debug):
     if debug:
@@ -206,7 +284,7 @@ class Window(QMainWindow):
         self.setWindowTitle("PiCam") 
         self.setGeometry(0, 0, wscreen, h)
         self.setWindowFlag(Qt.FramelessWindowHint)
-        self.setWindowFlag(Qt.WindowStaysOnTopHint)
+        #self.setWindowFlag(Qt.WindowStaysOnTopHint)
         
         if style == "boxes":
             xdistl = 5
@@ -485,6 +563,9 @@ def button_EXP_any_act(mode):
     
 
 #Button action ETC Menu
+def button_ETC_ADV_pressed():
+    visibility_Menu_ETC(False)
+    visibility_Menu_ADV(True)
 def button_ETC_PIC_pressed():
     visibility_Menu_ETC(False)
     feh()
@@ -492,6 +573,17 @@ def button_ETC_PIC_pressed():
 def button_ETC_BACK_pressed():
     visibility_Menu_ETC(False)
     visibility_Menu(True)
+    
+
+#Button action ADV Menu
+def button_ADV_poweroff_pressed():
+    os.system("poweroff")
+def button_ADV_reboot_pressed():
+    os.system("reboot")
+def button_ADV_BACK_pressed():
+    visibility_Menu_ADV(False)
+    visibility_Menu_ETC(True)
+    
     
 
 #Button action PIC Menu
@@ -514,15 +606,13 @@ def button_PIC_BAK_pressed():
     
 
 ##CheckBox checked actions##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#CheckBox action ETC FoM
+#CheckBox action ETC
 def checkbox_ETC_FoM_pressed():
     global setting_FoM
     setting_FoM = not setting_FoM
-#CheckBox action ETC raw
 def checkbox_ETC_raw_pressed():
     global setting_raw
     setting_raw = not setting_raw
-#CheckBox action ETC flicker avoidance
 def checkbox_ETC_flicker_pressed():
     global setting_flicker
     global setting_flicker_init
@@ -530,14 +620,48 @@ def checkbox_ETC_flicker_pressed():
         setting_flicker = "off"
     else:
         setting_flicker = setting_flicker_init
-#CheckBox action ETC horizontal flip
 def checkbox_ETC_hf_pressed():
     global setting_hf
     setting_hf = not setting_hf
-#CheckBox action ETC vertical flip
 def checkbox_ETC_vf_pressed():
     global setting_vf
     setting_vf = not setting_vf
+    
+#CheckBox action ADV
+def checkbox_ADV_USB_pressed():
+    global setting_USB
+    if setting_USB:
+        setting_USB_set(False)
+    else:
+        setting_USB_set(True)
+    setting_USB = not setting_USB
+def checkbox_ADV_HDMI_pressed():
+    global setting_HDMI
+    if setting_HDMI:
+        setting_HDMI_set(False)
+    else:
+        setting_HDMI_set(True)
+    setting_HDMI = not setting_HDMI
+def checkbox_ADV_WiFi_pressed():
+    global setting_WiFi
+    if setting_WiFi:
+        setting_WiFi_set(False)
+    else:
+        setting_WiFi_set(True)
+    setting_WiFi = not setting_WiFi
+def checkbox_ADV_SSH_pressed():
+    global setting_SSH
+    if setting_SSH:
+        setting_SSH_set(False)
+    else:
+        setting_SSH_set(True)
+def checkbox_ADV_VNC_pressed():
+    global setting_VNC
+    if setting_VNC:
+        setting_VNC_set(False)
+    else:
+        setting_VNC_set(True)
+    setting_VNC = not setting_VNC
 
 
 ##Create menu##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -764,7 +888,7 @@ button_EXP_auto      = Menu.button(xdistl, ydist + button_EXP_dist*0, button_w, 
 button_EXP_night     = Menu.button(xdistl, ydist + button_EXP_dist*1, button_w, button_EXP_h,   " ☾", 20, lambda: button_EXP_any_act("night"),     False)
 button_EXP_backlight = Menu.button(xdistl, ydist + button_EXP_dist*2, button_w, button_EXP_h,   "⚞I", 22, lambda: button_EXP_any_act("backlight"), False)
 button_EXP_spotlight = Menu.button(xdistl, ydist + button_EXP_dist*3, button_w, button_EXP_h,    "☄", 22, lambda: button_EXP_any_act("spotlight"), False)
-button_EXP_sports    = Menu.button(xdistl, ydist + button_EXP_dist*4, button_w, button_EXP_h,    "☡", 22, lambda: button_EXP_any_act("sports"),    False)
+button_EXP_sports    = Menu.button(xdistl, ydist + button_EXP_dist*4, button_w, button_EXP_h,    "⚘", 22, lambda: button_EXP_any_act("sports"),    False)
 button_EXP_snow      = Menu.button(xdistl, ydist + button_EXP_dist*5, button_w, button_EXP_h,    "☃", 22, lambda: button_EXP_any_act("snow"),      False)
 button_EXP_beach     = Menu.button(xdistl, ydist + button_EXP_dist*6, button_w, button_EXP_h,    "≃", 22, lambda: button_EXP_any_act("beach"),     False)
 button_EXP_fireworks = Menu.button(xdistl, ydist + button_EXP_dist*7, button_w, button_EXP_h,    "≛", 22, lambda: button_EXP_any_act("fireworks"), False)
@@ -811,15 +935,16 @@ def visibility_Menu_EXP_Mode(visibility):
 
 ##Create ECT menu##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 checkbox_w = button_w
-checkbox_h = h/12
-checkbox_ETC_dist = checkbox_h + h/50
-button_ETC_h = h/8
-button_ETC_dist = button_ETC_h + h/24
-checkbox_ETC_FoM     = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*0, checkbox_w, checkbox_h, "FoM", 18, setting_FoM,               checkbox_ETC_FoM_pressed,     False)
-checkbox_ETC_raw     = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*1, checkbox_w, checkbox_h, "RAW", 18, setting_raw,               checkbox_ETC_raw_pressed,     False)
-checkbox_ETC_flicker = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*2, checkbox_w, checkbox_h,  "Hz", 18, setting_flicker_init_bool, checkbox_ETC_flicker_pressed, False)
-checkbox_ETC_hf      = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*3, checkbox_w, checkbox_h,  "HF", 18, setting_hf,                checkbox_ETC_hf_pressed,      False)
-checkbox_ETC_vf      = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*4, checkbox_w, checkbox_h,  "VF", 18, setting_vf,                checkbox_ETC_vf_pressed,      False)
+checkbox_ETC_h = h/12
+checkbox_ETC_dist = checkbox_ETC_h + h/50
+button_ETC_h = h/10
+button_ETC_dist = button_ETC_h + h/50
+checkbox_ETC_FoM     = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*0, checkbox_w, checkbox_ETC_h, "FoM", 18, setting_FoM,               checkbox_ETC_FoM_pressed,     False)
+checkbox_ETC_raw     = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*1, checkbox_w, checkbox_ETC_h, "RAW", 18, setting_raw,               checkbox_ETC_raw_pressed,     False)
+checkbox_ETC_flicker = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*2, checkbox_w, checkbox_ETC_h,  "Hz", 18, setting_flicker_init_bool, checkbox_ETC_flicker_pressed, False)
+checkbox_ETC_hf      = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*3, checkbox_w, checkbox_ETC_h,  "HF", 18, setting_hf,                checkbox_ETC_hf_pressed,      False)
+checkbox_ETC_vf      = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*4, checkbox_w, checkbox_ETC_h,  "VF", 18, setting_vf,                checkbox_ETC_vf_pressed,      False)
+button_ETC_ADV       = Menu.button(xdistl, h - ydist - button_ETC_h - button_ETC_dist*2, button_w, button_ETC_h, "⚒",    24, button_ETC_ADV_pressed,  False)
 button_ETC_PIC       = Menu.button(xdistl, h - ydist - button_ETC_h - button_ETC_dist*1, button_w, button_ETC_h, "PIC", 24, button_ETC_PIC_pressed,  False)
 button_ETC_BACK      = Menu.button(xdistl, h - ydist - button_ETC_h - button_ETC_dist*0, button_w, button_ETC_h,   "↩", 32, button_ETC_BACK_pressed, False)
 #Change visibility of ETC Menu
@@ -830,17 +955,55 @@ def visibility_Menu_ETC(visibility):
         checkbox_ETC_flicker.show()
         checkbox_ETC_hf.show()
         checkbox_ETC_vf.show()
+        button_ETC_ADV.show()
         button_ETC_PIC.show()
         button_ETC_BACK.show()
-        button_ETC_PIC.setFocus() #Set Focus
+        button_ETC_BACK.setFocus() #Set Focus
     else:
         checkbox_ETC_FoM.hide()
         checkbox_ETC_raw.hide()
         checkbox_ETC_flicker.hide()
         checkbox_ETC_hf.hide()
         checkbox_ETC_vf.hide()
+        button_ETC_ADV.hide()
         button_ETC_PIC.hide()
         button_ETC_BACK.hide()
+
+
+##Create ADV menu##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+checkbox_ADV_h = h/12
+checkbox_ADV_dist = checkbox_ADV_h + h/50
+button_ADV_h = h/10
+button_ADV_dist = button_ADV_h + h/50
+checkbox_ADV_USB  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*0, checkbox_w, checkbox_ADV_h, "USB",  18,  setting_USB, checkbox_ADV_USB_pressed,  False)
+checkbox_ADV_HDMI = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*1, checkbox_w, checkbox_ADV_h, "HDMI", 18, setting_HDMI, checkbox_ADV_HDMI_pressed, False)
+checkbox_ADV_WiFi = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*2, checkbox_w, checkbox_ADV_h, "WiFi", 18, setting_WiFi, checkbox_ADV_WiFi_pressed, False)
+checkbox_ADV_SSH  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*3, checkbox_w, checkbox_ADV_h, "SSH",  18,  setting_SSH, checkbox_ADV_SSH_pressed,  False)
+checkbox_ADV_VNC  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*4, checkbox_w, checkbox_ADV_h, "VNC",  18,  setting_VNC, checkbox_ADV_VNC_pressed,  False)
+button_ADV_poweroff = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*2, button_w, button_ADV_h, "↴", 30, button_ADV_poweroff_pressed, False)
+button_ADV_reboot   = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*1, button_w, button_ADV_h, "↺", 30, button_ADV_reboot_pressed,   False)
+button_ADV_BACK     = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*0, button_w, button_ADV_h, "↩", 32, button_ADV_BACK_pressed,     False)
+#Change visibility of ADV Menu
+def visibility_Menu_ADV(visibility):
+    if visibility:
+        checkbox_ADV_USB.show()
+        checkbox_ADV_HDMI.show()
+        checkbox_ADV_WiFi.show()
+        checkbox_ADV_SSH.show()
+        checkbox_ADV_VNC.show()
+        button_ADV_poweroff.show()
+        button_ADV_reboot.show()
+        button_ADV_BACK.show()
+        button_ADV_BACK.setFocus() #Set Focus
+    else:
+        checkbox_ADV_USB.hide()
+        checkbox_ADV_HDMI.hide()
+        checkbox_ADV_WiFi.hide()
+        checkbox_ADV_SSH.hide()
+        checkbox_ADV_VNC.hide()
+        button_ADV_poweroff.hide()
+        button_ADV_reboot.hide()
+        button_ADV_BACK.hide()
 
 
 ##Create PIC menu##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -879,7 +1042,7 @@ label_i_h  = label_i_ht + label_i_hs
 label_i_dist = label_i_h + ydist/2
 #Create labels for Info bar
 label_it_battery           = Menu.label(label_xdistl, ydist + label_i_hs*0              + label_i_dist*0, label_w, label_i_ht, "BAT",                16, True)
-label_is_battery           = Menu.label(label_xdistl, ydist + label_i_hs*0 + label_i_ht + label_i_dist*0, label_w, label_i_hs, "?",                  10, True)
+label_is_battery           = Menu.label(label_xdistl, ydist + label_i_hs*0 + label_i_ht + label_i_dist*0, label_w, label_i_hs, battery(),                  10, True)
 label_it_storage           = Menu.label(label_xdistl, ydist + label_i_hs*0              + label_i_dist*1, label_w, label_i_ht, "SD",                 16, True)
 label_is_storage_total     = Menu.label(label_xdistl, ydist + label_i_hs*0 + label_i_ht + label_i_dist*1, label_w, label_i_hs, fs_stat("total"),     10, True)
 label_it_storage_total     = Menu.label(label_xdistl, ydist + label_i_hs*1 + label_i_ht + label_i_dist*1, label_w, label_i_hs, "total",              10, True)
@@ -895,7 +1058,14 @@ label_is_AWB = Menu.label(label_xdistl, h - ydist - label_i_hs*1 + label_i_ht - 
 label_it_EXP = Menu.label(label_xdistl, h - ydist - label_i_hs*1 - label_i_h              - label_i_dist*0, label_w, label_i_ht, "EXP",            16, True)
 label_is_EXM = Menu.label(label_xdistl, h - ydist - label_i_hs*1 + label_i_ht - label_i_h - label_i_dist*0, label_w, label_i_hs, setting_EXM,      10, True)
 label_is_EXP = Menu.label(label_xdistl, h - ydist - label_i_hs*0 + label_i_ht - label_i_h - label_i_dist*0, label_w, label_i_hs, setting_EXP,      10, True)
-
+#Update info
+def update_i_periodically():
+    time = 20
+    Timer(time, update_i_periodically).start() #Run function periodically
+    update_i_battery()
+    update_i_storage()
+def update_i_battery():
+    label_is_battery.setText(battery())
 def update_i_storage():
     label_is_storage_total.setText(fs_stat("total"))
     label_is_storage_available.setText(fs_stat("available"))
@@ -905,6 +1075,8 @@ def update_i_settings():
     label_is_AWB.setText(setting_AWB)
     label_is_EXM.setText(setting_EXM)
     label_is_EXP.setText(setting_EXP)
+
+update_i_periodically()
 
 
 ##CAMERA##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -987,6 +1159,7 @@ def raspistill():
 #capture image
 def capture():
     os.system("pkill -USR1 raspistill")
+    update_i_storage()
     #Debugging message
     if debugging:
         print("Image captured")
