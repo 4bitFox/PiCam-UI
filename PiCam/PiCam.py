@@ -62,19 +62,19 @@ setting_flicker = "50hz" #Flicker avoidance
 setting_hf      = False  #Flip Image horizontally
 setting_vf      = False  #Flip Image vertically
 #Default advanced settings
-setting_USB  = True
-setting_HDMI = True
-setting_WiFi = True
-setting_SSH  = True
-setting_VNC  = True
+setting_USB  = False
+setting_HDMI = False
+setting_WiFi = False
+setting_SSH  = False
+setting_VNC  = False
 
 
 #GPIO Buttons
 #If you use buttons connected to GPIO, you can set the pin numbers here:
-button_capture = Button(21) #Take a photo
-button_up      = Button(25) #Move up in menu
-button_select  = Button(23) #Select in menu
-button_down    = Button(24) #Move down in menu
+button_capture = Button(26) #Take a photo
+button_up      = Button(16) #Move up in menu
+button_select  = Button(20) #Select in menu
+button_down    = Button(21) #Move down in menu
 
 #Hardware
 hw_battery = True #Enable battery. You have change the "battery()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
@@ -84,7 +84,7 @@ hw_utc = True #Enable UTC. You have change the "utc()" function yourself if you 
 title = "PiCam"
 cursor_hidden = True
 style = "line-keys" #How the UI looks. You can use "boxes", "line", "line-keys" or "line-touch"
-debugging = True #Debugging (print stuff to console)
+debugging = False #Debugging (print stuff to console)
 
 
 ### The "real" code beginns here :) ###
@@ -295,7 +295,7 @@ class Window(QMainWindow):
         self.setWindowTitle(title) 
         self.setGeometry(0, 0, wscreen, h)
         self.setWindowFlag(Qt.FramelessWindowHint)
-        #self.setWindowFlag(Qt.WindowStaysOnTopHint)
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
         if cursor_hidden:
             self.setCursor(QCursor(Qt.BlankCursor))
         
