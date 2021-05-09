@@ -84,7 +84,7 @@ hw_utc = True #Enable UTC. You have change the "utc()" function yourself if you 
 title = "PiCam"
 cursor_hidden = True
 style = "line-keys" #How the UI looks. You can use "boxes", "line", "line-keys" or "line-touch"
-debugging = True #Debugging (print stuff to console)
+debugging = False #Debugging (print stuff to console)
 
 
 ###Code beginns here :)###
@@ -1067,26 +1067,6 @@ button_SS_16667    = Menu.button(xdistl, ydist + button_SS_dist*5, button_w, but
 button_SS_33333    = Menu.button(xdistl, ydist + button_SS_dist*6, button_w, button_SS_h,   "1/30", 18, lambda: button_SS_1_act(33333),    False)
 button_SS_66667    = Menu.button(xdistl, ydist + button_SS_dist*7, button_w, button_SS_h,   "1/15", 18, lambda: button_SS_1_act(66667),    False)
 button_SS_DOWN_1   = Menu.button(xdistl, ydist + button_SS_dist*8, button_w, button_SS_h,      "▼", 20, button_SS_DOWN_1_pressed,          False)
-#Create buttons for SS Menu 2
-button_SS_UP_2     = Menu.button(xdistl, ydist + button_SS_dist*0, button_w, button_SS_h,      "▲", 20, button_SS_UP_2_pressed,            False)
-button_SS_125000   = Menu.button(xdistl, ydist + button_SS_dist*1, button_w, button_SS_h,    "1/8", 18, lambda: button_SS_2_act(125000),   False)
-button_SS_250000   = Menu.button(xdistl, ydist + button_SS_dist*2, button_w, button_SS_h,    "1/4", 18, lambda: button_SS_2_act(250000),   False)
-button_SS_500000   = Menu.button(xdistl, ydist + button_SS_dist*3, button_w, button_SS_h,    "1/2", 18, lambda: button_SS_2_act(500000),   False)
-button_SS_1000000  = Menu.button(xdistl, ydist + button_SS_dist*4, button_w, button_SS_h,      "1", 18, lambda: button_SS_2_act(1000000),  False)
-button_SS_2000000  = Menu.button(xdistl, ydist + button_SS_dist*5, button_w, button_SS_h,      "2", 18, lambda: button_SS_2_act(2000000),  False)
-button_SS_4000000  = Menu.button(xdistl, ydist + button_SS_dist*6, button_w, button_SS_h,      "4", 18, lambda: button_SS_2_act(4000000),  False)
-button_SS_8000000  = Menu.button(xdistl, ydist + button_SS_dist*7, button_w, button_SS_h,      "8", 18, lambda: button_SS_2_act(8000000),  False)
-button_SS_DOWN_2   = Menu.button(xdistl, ydist + button_SS_dist*8, button_w, button_SS_h,      "▼", 20, button_SS_DOWN_2_pressed,          False)
-#Create buttons for SS Menu 3
-button_SS_UP_3     = Menu.button(xdistl, ydist + button_SS_dist*0, button_w, button_SS_h,      "▲", 20, button_SS_UP_3_pressed,            False)
-button_SS_15000000 = Menu.button(xdistl, ydist + button_SS_dist*1, button_w, button_SS_h,     "15", 18, lambda: button_SS_3_act(15000000), False)
-button_SS_30000000 = Menu.button(xdistl, ydist + button_SS_dist*2, button_w, button_SS_h,     "30", 18, lambda: button_SS_3_act(30000000), False)
-button_SS_60000000 = Menu.button(xdistl, ydist + button_SS_dist*3, button_w, button_SS_h,     "60", 18, lambda: button_SS_3_act(60000000), False)
-button_SS_auto     = Menu.button(xdistl, ydist + button_SS_dist*4, button_w, button_SS_h,   "AUTO", 18, lambda: button_SS_3_act(0),        False)
-button_SS_125      = Menu.button(xdistl, ydist + button_SS_dist*5, button_w, button_SS_h, "1/8000", 18, lambda: button_SS_3_act(125),      False)
-button_SS_250      = Menu.button(xdistl, ydist + button_SS_dist*6, button_w, button_SS_h, "1/4000", 18, lambda: button_SS_3_act(250),      False)
-button_SS_500      = Menu.button(xdistl, ydist + button_SS_dist*7, button_w, button_SS_h, "1/2000", 18, lambda: button_SS_3_act(500),      False)
-button_SS_DOWN_3   = Menu.button(xdistl, ydist + button_SS_dist*8, button_w, button_SS_h,      "▼", 20, button_SS_DOWN_3_pressed,          False)
 #Change visibility of SS Menu 1
 def visibility_Menu_SS_1(visibility):
     if visibility:
@@ -1110,6 +1090,17 @@ def visibility_Menu_SS_1(visibility):
         button_SS_33333.hide()
         button_SS_66667.hide()
         button_SS_DOWN_1.hide()
+        
+#Create buttons for SS Menu 2
+button_SS_UP_2     = Menu.button(xdistl, ydist + button_SS_dist*0, button_w, button_SS_h,      "▲", 20, button_SS_UP_2_pressed,            False)
+button_SS_125000   = Menu.button(xdistl, ydist + button_SS_dist*1, button_w, button_SS_h,    "1/8", 18, lambda: button_SS_2_act(125000),   False)
+button_SS_250000   = Menu.button(xdistl, ydist + button_SS_dist*2, button_w, button_SS_h,    "1/4", 18, lambda: button_SS_2_act(250000),   False)
+button_SS_500000   = Menu.button(xdistl, ydist + button_SS_dist*3, button_w, button_SS_h,    "1/2", 18, lambda: button_SS_2_act(500000),   False)
+button_SS_1000000  = Menu.button(xdistl, ydist + button_SS_dist*4, button_w, button_SS_h,      "1", 18, lambda: button_SS_2_act(1000000),  False)
+button_SS_2000000  = Menu.button(xdistl, ydist + button_SS_dist*5, button_w, button_SS_h,      "2", 18, lambda: button_SS_2_act(2000000),  False)
+button_SS_4000000  = Menu.button(xdistl, ydist + button_SS_dist*6, button_w, button_SS_h,      "4", 18, lambda: button_SS_2_act(4000000),  False)
+button_SS_8000000  = Menu.button(xdistl, ydist + button_SS_dist*7, button_w, button_SS_h,      "8", 18, lambda: button_SS_2_act(8000000),  False)
+button_SS_DOWN_2   = Menu.button(xdistl, ydist + button_SS_dist*8, button_w, button_SS_h,      "▼", 20, button_SS_DOWN_2_pressed,          False)
 #Change visibility of SS Menu 2
 def visibility_Menu_SS_2(visibility):
     if visibility:
@@ -1133,6 +1124,17 @@ def visibility_Menu_SS_2(visibility):
         button_SS_4000000.hide()
         button_SS_8000000.hide()
         button_SS_DOWN_2.hide()
+        
+#Create buttons for SS Menu 3
+button_SS_UP_3     = Menu.button(xdistl, ydist + button_SS_dist*0, button_w, button_SS_h,      "▲", 20, button_SS_UP_3_pressed,            False)
+button_SS_15000000 = Menu.button(xdistl, ydist + button_SS_dist*1, button_w, button_SS_h,     "15", 18, lambda: button_SS_3_act(15000000), False)
+button_SS_30000000 = Menu.button(xdistl, ydist + button_SS_dist*2, button_w, button_SS_h,     "30", 18, lambda: button_SS_3_act(30000000), False)
+button_SS_60000000 = Menu.button(xdistl, ydist + button_SS_dist*3, button_w, button_SS_h,     "60", 18, lambda: button_SS_3_act(60000000), False)
+button_SS_auto     = Menu.button(xdistl, ydist + button_SS_dist*4, button_w, button_SS_h,   "AUTO", 18, lambda: button_SS_3_act(0),        False)
+button_SS_125      = Menu.button(xdistl, ydist + button_SS_dist*5, button_w, button_SS_h, "1/8000", 18, lambda: button_SS_3_act(125),      False)
+button_SS_250      = Menu.button(xdistl, ydist + button_SS_dist*6, button_w, button_SS_h, "1/4000", 18, lambda: button_SS_3_act(250),      False)
+button_SS_500      = Menu.button(xdistl, ydist + button_SS_dist*7, button_w, button_SS_h, "1/2000", 18, lambda: button_SS_3_act(500),      False)
+button_SS_DOWN_3   = Menu.button(xdistl, ydist + button_SS_dist*8, button_w, button_SS_h,      "▼", 20, button_SS_DOWN_3_pressed,          False)
 #Change visibility of SS Menu 3
 def visibility_Menu_SS_3(visibility):
     if visibility:
@@ -1196,28 +1198,16 @@ def visibility_Menu_AWB(visibility):
         button_AWB_horizon.hide()
 
 
-##Create EXP menus##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+##Create EXM menus##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 button_EXM_h = h/8
 button_EXM_dist = button_EXM_h + h/24
-button_EXP_h = h/12
-button_EXP_dist = (h - 2*ydist - button_EXP_h)/8
 #Create buttons for EXP (Metering) Menu
 button_EXM_average   = Menu.button(xdistl, ydist + button_EXM_dist*0, button_w, button_EXM_h,    "∅", 28, lambda: button_EXM_any_act("average"),   False)
 button_EXM_matrix    = Menu.button(xdistl, ydist + button_EXM_dist*1, button_w, button_EXM_h,    "◯", 22, lambda: button_EXM_any_act("matrix"),    False)
 button_EXM_spot      = Menu.button(xdistl, ydist + button_EXM_dist*2, button_w, button_EXM_h,    "·", 22, lambda: button_EXM_any_act("spot"),      False)
 button_EXM_backlit   = Menu.button(xdistl, ydist + button_EXM_dist*3, button_w, button_EXM_h,   "⚞I", 22, lambda: button_EXM_any_act("backlit"),   False)
 button_EXP_mode      = Menu.button(xdistl,  h - ydist - button_EXM_h, button_w, button_EXM_h, "MODE", 18, button_EXP_mode_pressed,                 False)
-#Create buttons for EXP Mode Menu (nested)
-button_EXP_auto      = Menu.button(xdistl, ydist + button_EXP_dist*0, button_w, button_EXP_h, "AUTO", 18, lambda: button_EXP_any_act("auto"),      False)
-button_EXP_night     = Menu.button(xdistl, ydist + button_EXP_dist*1, button_w, button_EXP_h,   " ☾", 20, lambda: button_EXP_any_act("night"),     False)
-button_EXP_backlight = Menu.button(xdistl, ydist + button_EXP_dist*2, button_w, button_EXP_h,   "⚞I", 22, lambda: button_EXP_any_act("backlight"), False)
-button_EXP_spotlight = Menu.button(xdistl, ydist + button_EXP_dist*3, button_w, button_EXP_h,    "☄", 22, lambda: button_EXP_any_act("spotlight"), False)
-button_EXP_sports    = Menu.button(xdistl, ydist + button_EXP_dist*4, button_w, button_EXP_h,    "⚘", 22, lambda: button_EXP_any_act("sports"),    False)
-button_EXP_snow      = Menu.button(xdistl, ydist + button_EXP_dist*5, button_w, button_EXP_h,    "☃", 22, lambda: button_EXP_any_act("snow"),      False)
-button_EXP_beach     = Menu.button(xdistl, ydist + button_EXP_dist*6, button_w, button_EXP_h,    "≃", 22, lambda: button_EXP_any_act("beach"),     False)
-button_EXP_fireworks = Menu.button(xdistl, ydist + button_EXP_dist*7, button_w, button_EXP_h,    "≛", 22, lambda: button_EXP_any_act("fireworks"), False)
-button_EXP_antishake = Menu.button(xdistl, ydist + button_EXP_dist*8, button_w, button_EXP_h,  "░▒▓",  14, lambda: button_EXP_any_act("antishake"), False)
-#Change visibility of EXP Menu
+#Change visibility of EXM Menu
 def visibility_Menu_EXP(visibility):
     if visibility:
         button_EXM_average.show()
@@ -1232,7 +1222,22 @@ def visibility_Menu_EXP(visibility):
         button_EXM_spot.hide()
         button_EXM_backlit.hide()
         button_EXP_mode.hide()
-#Cange visibility of EXP Mode Menu (nested)
+        
+
+##Create EXP menus##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+button_EXP_h = h/12
+button_EXP_dist = (h - 2*ydist - button_EXP_h)/8
+#Create buttons for EXP Mode Menu
+button_EXP_auto      = Menu.button(xdistl, ydist + button_EXP_dist*0, button_w, button_EXP_h, "AUTO", 18, lambda: button_EXP_any_act("auto"),      False)
+button_EXP_night     = Menu.button(xdistl, ydist + button_EXP_dist*1, button_w, button_EXP_h,   " ☾", 20, lambda: button_EXP_any_act("night"),     False)
+button_EXP_backlight = Menu.button(xdistl, ydist + button_EXP_dist*2, button_w, button_EXP_h,   "⚞I", 22, lambda: button_EXP_any_act("backlight"), False)
+button_EXP_spotlight = Menu.button(xdistl, ydist + button_EXP_dist*3, button_w, button_EXP_h,    "☄", 22, lambda: button_EXP_any_act("spotlight"), False)
+button_EXP_sports    = Menu.button(xdistl, ydist + button_EXP_dist*4, button_w, button_EXP_h,    "⚘", 22, lambda: button_EXP_any_act("sports"),    False)
+button_EXP_snow      = Menu.button(xdistl, ydist + button_EXP_dist*5, button_w, button_EXP_h,    "☃", 22, lambda: button_EXP_any_act("snow"),      False)
+button_EXP_beach     = Menu.button(xdistl, ydist + button_EXP_dist*6, button_w, button_EXP_h,    "≃", 22, lambda: button_EXP_any_act("beach"),     False)
+button_EXP_fireworks = Menu.button(xdistl, ydist + button_EXP_dist*7, button_w, button_EXP_h,    "≛", 22, lambda: button_EXP_any_act("fireworks"), False)
+button_EXP_antishake = Menu.button(xdistl, ydist + button_EXP_dist*8, button_w, button_EXP_h,  "░▒▓",  14, lambda: button_EXP_any_act("antishake"), False)
+#Cange visibility of EXP Mode Menu
 def visibility_Menu_EXP_Mode(visibility):
     if visibility:
         button_EXP_auto.show()
@@ -1364,7 +1369,7 @@ label_i_ht = h/22
 label_i_hs = h/30
 label_i_h  = label_i_ht + label_i_hs
 label_i_dist = label_i_h + ydist/2
-#Create labels for Info bar
+#Create labels for Info bar top
 label_it_battery           = Menu.label(label_xdistl, ydist + label_i_hs*0              + label_i_dist*0, label_w, label_i_ht, "BAT",                16, True)
 label_is_battery           = Menu.label(label_xdistl, ydist + label_i_hs*0 + label_i_ht + label_i_dist*0, label_w, label_i_hs, battery(),                  10, True)
 label_it_storage           = Menu.label(label_xdistl, ydist + label_i_hs*0              + label_i_dist*1, label_w, label_i_ht, "SD",                 16, True)
@@ -1372,7 +1377,7 @@ label_is_storage_total     = Menu.label(label_xdistl, ydist + label_i_hs*0 + lab
 label_it_storage_total     = Menu.label(label_xdistl, ydist + label_i_hs*1 + label_i_ht + label_i_dist*1, label_w, label_i_hs, "total",              10, True)
 label_is_storage_available = Menu.label(label_xdistl, ydist + label_i_hs*2 + label_i_ht + label_i_dist*1, label_w, label_i_hs, fs_stat("available"), 10, True)
 label_it_storage_available = Menu.label(label_xdistl, ydist + label_i_hs*3 + label_i_ht + label_i_dist*1, label_w, label_i_hs, "avail.",          10, True)
-
+#Create labels for Info bar top
 label_it_ISO = Menu.label(label_xdistl, h - ydist - label_i_hs*1 - label_i_h              - label_i_dist*3, label_w, label_i_ht, "ISO",            16, True)
 label_is_ISO = Menu.label(label_xdistl, h - ydist - label_i_hs*1 + label_i_ht - label_i_h - label_i_dist*3, label_w, label_i_hs, setting_ISO_hr(), 10, True)
 label_it_SS  = Menu.label(label_xdistl, h - ydist - label_i_hs*1 - label_i_h              - label_i_dist*2, label_w, label_i_ht, "SS",             16, True)
@@ -1404,5 +1409,5 @@ update_i_periodically()
 
 
 ##Run App##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-Menu.show()  #show UI
-App.exec()   #Run UI
+Menu.show()
+App.exec()
