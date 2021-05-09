@@ -13,7 +13,7 @@
 #This script requires "feh" for image viewing to be installed (sudo apt install feh).
 #You also need to have the python3 library "pynput" installed (pip3 install pynput).
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QCheckBox, QLabel
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from gpiozero import Button
 from pynput.keyboard import Key, Controller
@@ -77,10 +77,13 @@ button_select  = Button(23) #Select in menu
 button_down    = Button(24) #Move down in menu
 
 #Hardware
-battery_hat = True #Enable battery. You have change the "battery()" function yourself if you use a different HAT than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
+hw_battery = True #Enable battery. You have change the "battery()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
+hw_utc = True #Enable UTC. You have change the "utc()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
 
 #Other
-style = "line" #How the UI looks. You can use "boxes" or "line"
+title = "PiCam"
+cursor_hidden = True
+style = "line-keys" #How the UI looks. You can use "boxes", "line", "line-keys" or "line-touch"
 debugging = True #Debugging (print stuff to console)
 
 
@@ -243,12 +246,20 @@ def fs_stat(output):
             return available
 
 def battery():
-    if battery_hat:
-        battery = os.popen("echo -n get battery | netcat -q 0 127.0.0.1 8423 | sed s/[^0-9.]*//g").read()
-        battery = battery.split(".")[0] + "%"
+    if hw_battery:
+        battery = os.popen("echo get battery | netcat -q 0 127.0.0.1 8423 | sed s/[^0-9.]*//g").read()
+        battery = battery.split(".")[0].strip() + "%"
         return battery
     else:
         return "N/A"
+
+def utc(): #Set System time from UTC and update time from internet if connected
+    time = 300
+    Timer(time, utc).start() #Run function periodically
+    os.system("echo rtc_web | netcat -q 0 127.0.0.1 8423 > /dev/null 2>&1 &")
+    os.system("sleep 5 && echo rtc_rtc2pi | netcat -q 0 127.0.0.1 8423 > /dev/null &")
+
+utc()
         
         
 ##Debug & Info##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -281,10 +292,12 @@ class Window(QMainWindow):
         global xdistl
         global xdistr
         
-        self.setWindowTitle("PiCam") 
+        self.setWindowTitle(title) 
         self.setGeometry(0, 0, wscreen, h)
         self.setWindowFlag(Qt.FramelessWindowHint)
         #self.setWindowFlag(Qt.WindowStaysOnTopHint)
+        if cursor_hidden:
+            self.setCursor(QCursor(Qt.BlankCursor))
         
         if style == "boxes":
             xdistl = 5
@@ -422,9 +435,137 @@ class Window(QMainWindow):
             height: 0px;
             }
             """
+            
+        if style == "line-keys":
+            xdistl = 0
+            xdistr = -2
+            stylesheet = """
+            QWidget {
+            background-color: black;
+            }
+            
+            QLabel {
+            color: white;
+            text-align: center;
+            }
+    
+            QPushButton {
+            border: 6px solid;
+            border-left-color: lightgray;
+            border-right-color: black;
+            border-top-color: black;
+            border-bottom-color: black;
+            color: white;
+            text-align: center;
+            }
+        
+            QPushButton:focus {
+            border: 10px solid;
+            border-left-color: white;
+            }
+        
+            QPushButton:pressed {
+            border: 4px solid;
+            border-left-color: gray;
+            }
+        
+            QCheckBox {
+            border: 6px solid;
+            border-left-color: lightgray;
+            border-right-color: black;
+            border-top-color: black;
+            border-bottom-color: black;
+            color: white;
+            }
+        
+            QCheckBox:focus {
+            border: 10px solid;
+            border-left-color: white;
+            }
+        
+            QCheckBox:pressed {
+            border: 6px solid;
+            border-left-color: gray;
+            }
+        
+            QCheckBox:checked {
+            color: green;
+            }
+        
+            QCheckBox:unchecked {
+            color: red;
+            }
+        
+            QCheckBox::indicator {
+            width: 0px;
+            height: 0px;
+            }
+            """
+            
+        if style == "line-touch":
+            xdistl = 0
+            xdistr = -2
+            stylesheet = """
+            QWidget {
+            background-color: black;
+            }
+            
+            QLabel {
+            color: white;
+            text-align: center;
+            }
+    
+            QPushButton {
+            border: 8px solid;
+            border-left-color: lightgray;
+            border-right-color: black;
+            border-top-color: black;
+            border-bottom-color: black;
+            color: white;
+            text-align: center;
+            }
+        
+            QPushButton:pressed {
+            border: 4px solid;
+            border-left-color: gray;
+            }
+        
+            QCheckBox {
+            border: 6px solid;
+            border-left-color: lightgray;
+            border-right-color: black;
+            border-top-color: black;
+            border-bottom-color: black;
+            color: white;
+            }
+        
+            QCheckBox:pressed {
+            border: 6px solid;
+            border-left-color: gray;
+            }
+        
+            QCheckBox:checked {
+            color: green;
+            }
+        
+            QCheckBox:unchecked {
+            color: red;
+            }
+        
+            QCheckBox::indicator {
+            width: 0px;
+            height: 0px;
+            }
+            """
 
         self.setStyleSheet(stylesheet)
         
+    def quit(self):
+        os.system("pkill raspistill")
+        os.system("pkill feh")
+        self.close()
+        print("Quit")
+        sys.exit(0)
     
     #Create Button
     def button(self, x, y, w, h, Label, font_size, Command, visibility):
@@ -578,8 +719,8 @@ def button_ETC_BACK_pressed():
 #Button action ADV Menu
 def button_ADV_poweroff_pressed():
     os.system("poweroff")
-def button_ADV_reboot_pressed():
-    os.system("reboot")
+def button_ADV_quit_pressed():
+    Menu.quit()
 def button_ADV_BACK_pressed():
     visibility_Menu_ADV(False)
     visibility_Menu_ETC(True)
@@ -662,6 +803,10 @@ def checkbox_ADV_VNC_pressed():
     else:
         setting_VNC_set(True)
     setting_VNC = not setting_VNC
+
+##Preview label##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+label_preview = Menu.label(w, 0, wpreview, h, "⌛", 60, True)
+label_preview.setAlignment(Qt.AlignCenter) #Align
 
 
 ##Create menu##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -981,7 +1126,7 @@ checkbox_ADV_WiFi = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*2, checkbox_
 checkbox_ADV_SSH  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*3, checkbox_w, checkbox_ADV_h, "SSH",  18,  setting_SSH, checkbox_ADV_SSH_pressed,  False)
 checkbox_ADV_VNC  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*4, checkbox_w, checkbox_ADV_h, "VNC",  18,  setting_VNC, checkbox_ADV_VNC_pressed,  False)
 button_ADV_poweroff = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*2, button_w, button_ADV_h, "↴", 30, button_ADV_poweroff_pressed, False)
-button_ADV_reboot   = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*1, button_w, button_ADV_h, "↺", 30, button_ADV_reboot_pressed,   False)
+button_ADV_quit     = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*1, button_w, button_ADV_h, "✕", 30, button_ADV_quit_pressed,     False)
 button_ADV_BACK     = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*0, button_w, button_ADV_h, "↩", 32, button_ADV_BACK_pressed,     False)
 #Change visibility of ADV Menu
 def visibility_Menu_ADV(visibility):
@@ -992,7 +1137,7 @@ def visibility_Menu_ADV(visibility):
         checkbox_ADV_SSH.show()
         checkbox_ADV_VNC.show()
         button_ADV_poweroff.show()
-        button_ADV_reboot.show()
+        button_ADV_quit.show()
         button_ADV_BACK.show()
         button_ADV_BACK.setFocus() #Set Focus
     else:
@@ -1002,7 +1147,7 @@ def visibility_Menu_ADV(visibility):
         checkbox_ADV_SSH.hide()
         checkbox_ADV_VNC.hide()
         button_ADV_poweroff.hide()
-        button_ADV_reboot.hide()
+        button_ADV_quit.hide()
         button_ADV_BACK.hide()
 
 
@@ -1170,12 +1315,15 @@ def capture():
 def feh_command():
     arg_path = setting_output_location + " "
     arg_geometry = "-x -g " + str(wpreview) + "x" + str(h) + "+" + str(w) + "+0 -. "
-    arg_needed = "-n -d -B black -N --edit "
+    arg_needed = "-n -d -Y -B black -N --edit "
+    arg_cursor = "-Y "
     
     command  = "feh "
     command += arg_path
     command += arg_geometry
     command += arg_needed
+    if cursor_hidden:
+        command += arg_cursor
     #Debugging message
     if debugging:
         print("##feh command:##")
@@ -1189,7 +1337,7 @@ def feh():
     os.system("pkill raspistill")
     feh = feh_command()
     os.system(feh)
-    sleep(2)#Increrase if feh takes long to open
+    sleep(1)#Increrase if feh takes long to open
     Menu.resize(w, h)
     Menu.activateWindow()
 
