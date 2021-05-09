@@ -15,3 +15,6 @@ For example:
     - Navigation buttons
   - Code for Battery level
   - Code for RTC
+
+Script:
+https://raw.githubusercontent.com/4bitFox/PiCam-UI/main/PiCam/PiCam.py?token=AH5DNJOYMRZ76QETLTOCGOTAS76X4
