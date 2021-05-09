@@ -84,30 +84,31 @@ hw_utc = True #Enable UTC. You have change the "utc()" function yourself if you 
 title = "PiCam"
 cursor_hidden = True
 style = "line-keys" #How the UI looks. You can use "boxes", "line", "line-keys" or "line-touch"
-debugging = False #Debugging (print stuff to console)
+debugging = True #Debugging (print stuff to console)
 
 
-### The "real" code beginns here :) ###
-##Shorten common Variables, Save and apply initial settings & other stuff##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+###Code beginns here :)###
+##Variables##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 winfo = wscreen - wpreview - wmenu #width of info menu on the right
 h = hscreen
 
-setting_flicker_init = setting_flicker
-if setting_flicker_init == "off":
+xdistl = 0
+xdistr = 0
+
+setting_flicker_init = setting_flicker #Save initial flicker setting
+if setting_flicker_init == "off": #Initial bool for checkbox
     setting_flicker_init_bool = False
 else:
     setting_flicker_init_bool = True
     
-xdistl = 0
-xdistr = 0
-
-def setting_ISO_hr():
+def setting_ISO_hr(): #ISO in info menu
     if setting_ISO == 0:
         ISO = "auto"
     else:
         ISO = str(setting_ISO)
     return ISO
-def setting_SS_hr():
+    
+def setting_SS_hr(): #Shutter speed in info menu
     if setting_SS == 0:
         SS = "auto"
     elif setting_SS == 125:
@@ -153,8 +154,10 @@ def setting_SS_hr():
     else:
         SS = "?"
     return SS
+  
     
-def setting_USB_set(state):
+##Apply settings to Pi##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+def setting_USB_set(state): #Apply USB setting
     if state:
         os.system("echo 1-1 | sudo tee /sys/bus/usb/drivers/usb/bind > /dev/null 2>&1")
         if debugging:
@@ -166,7 +169,7 @@ def setting_USB_set(state):
 
 setting_USB_set(setting_USB)
 
-def setting_HDMI_set(state):
+def setting_HDMI_set(state): #Apply HDMI setting
     if state:
         os.system("sudo /opt/vc/bin/tvservice -p > /dev/null")
         if debugging:
@@ -178,7 +181,7 @@ def setting_HDMI_set(state):
 
 setting_HDMI_set(setting_HDMI)
 
-def setting_WiFi_set(state):
+def setting_WiFi_set(state): #Apply WiFi setting
     if state:
         os.system("sudo ifconfig wlan0 up")
         if debugging:
@@ -190,7 +193,7 @@ def setting_WiFi_set(state):
 
 setting_WiFi_set(setting_WiFi)
 
-def setting_SSH_set(state):
+def setting_SSH_set(state): #Apply SSH setting
     if state:
         os.system("sudo systemctl start --now ssh.service")
         if debugging:
@@ -202,7 +205,7 @@ def setting_SSH_set(state):
 
 setting_SSH_set(setting_SSH)
 
-def setting_VNC_set(state):
+def setting_VNC_set(state): #Apply VNC setting
     if state:
         os.system("sudo systemctl start --now vncserver-x11-serviced.service")
         if debugging:
@@ -214,7 +217,9 @@ def setting_VNC_set(state):
 
 setting_VNC_set(setting_VNC)
 
-def fs_stat(output):
+
+##Stats##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+def fs_stat(output): #Filesystem statistics (Space total and available)
     statvfs = os.statvfs(setting_output_location)
     if output == "total":
         total     = statvfs.f_frsize * statvfs.f_blocks
@@ -245,7 +250,7 @@ def fs_stat(output):
             available = str(available_MiB) + "GiB"
             return available
 
-def battery():
+def battery(): #Get battery level in %
     if hw_battery:
         battery = os.popen("echo get battery | netcat -q 0 127.0.0.1 8423 | sed s/[^0-9.]*//g").read()
         battery = battery.split(".")[0].strip() + "%"
@@ -253,6 +258,8 @@ def battery():
     else:
         return "N/A"
 
+
+##UTC and System Time##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 def utc(): #Set System time from UTC and update time from internet if connected
     time = 300
     Timer(time, utc).start() #Run function periodically
@@ -262,27 +269,6 @@ def utc(): #Set System time from UTC and update time from internet if connected
 utc()
         
         
-##Debug & Info##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-def print_settings(debug):
-    if debug:
-        print("##Picture Settings:##")
-        print("ISO:", setting_ISO_hr())
-        print("SS :", setting_SS_hr())
-        print("AWB:", setting_AWB)
-        print("EXP:", setting_EXP)
-        print("EXM:", setting_EXM)
-        print()
-        print("##Additional Settings:##")
-        print("FoM:         ", setting_FoM)
-        print("raw Bayer:   ", setting_raw)
-        print("Anti-Flicker:", setting_flicker)
-        print("H Flip:      ", setting_hf)
-        print("V Flip:      ", setting_vf)
-        print()
-
-print_settings(debugging)
-
-
 ##WINDOW CLASS##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 class Window(QMainWindow): 
     def __init__(self):
@@ -604,12 +590,33 @@ class Window(QMainWindow):
         return label
         
 
-##Create window##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+##Create window instance##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 App = QApplication(sys.argv)
 Menu = Window()
 
 
-##CAMERA##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+##Print settings##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+def print_settings():
+        print("##Picture Settings:##")
+        print("ISO:", setting_ISO_hr())
+        print("SS :", setting_SS_hr())
+        print("AWB:", setting_AWB)
+        print("EXP:", setting_EXP)
+        print("EXM:", setting_EXM)
+        print()
+        print("##Additional Settings:##")
+        print("FoM:         ", setting_FoM)
+        print("raw Bayer:   ", setting_raw)
+        print("Anti-Flicker:", setting_flicker)
+        print("H Flip:      ", setting_hf)
+        print("V Flip:      ", setting_vf)
+        print()
+
+if debugging:
+    print_settings()
+    
+
+##Camera Preview##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 #Make raspistill command
 def raspistill_command():
     #Output
@@ -1000,7 +1007,8 @@ def visibility_Menu(visibility):
         button_EXP.show()
         button_ETC.show()
         button_ISO.setFocus() #Set Focus
-        print_settings(debugging) #Print changed settings to console
+        if debugging:
+            print_settings() #Print changed settings to console if debugging
         raspistill() #Refresh preview
         update_i_settings() #Update info menu
     else:
