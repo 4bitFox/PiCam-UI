@@ -35,18 +35,18 @@ import sys
 wscreen  = 800 #Screen width
 hscreen  = 480 #Screen height
 wpreview = 640 #Preview width (https://andrew.hedges.name/experiments/aspect_ratio/)
-winfo    = 56
+wmenu    = 100 #Menu with (left)
 
 
 #Output settings
 setting_output_location = "/home/pi/Pictures" #Where to store pictures
-setting_output_prefix = "IMG_"          #Filename prefix
-setting_output_suffix_noraw = ""       #Filename suffix when RAW disabled
-setting_output_suffix_raw = "R"         #Filename suffix when RAW enabled
-setting_encoding = "jpg"                #Encoding of picture taken
-setting_mode = 3                        #Sensor mode
-setting_quality = 90                    #Compression quality
-setting_thumbnail = "64,48,35"          #Thumbnail settings ("width,height,quality")
+setting_output_prefix = "IMG_"   #Filename prefix
+setting_output_suffix_noraw = "" #Filename suffix when RAW disabled
+setting_output_suffix_raw = "R"  #Filename suffix when RAW enabled
+setting_encoding = "jpg"         #Encoding of picture taken
+setting_mode = 3                 #Sensor mode
+setting_quality = 90             #Compression quality
+setting_thumbnail = "64,48,35"   #Thumbnail settings ("width,height,quality")
 
 
 #Default Camera settings
@@ -56,17 +56,17 @@ setting_SS  = 0        #Shutter Speed
 setting_EXP = "auto"   #Exposure Mode
 setting_EXM = "matrix" #Exposure Metering
 #Default additional settings
-setting_FoM     = False   #Display focus FoM value
-setting_raw     = False   #Add raw Bayer data to JPEG
+setting_FoM     = False  #Display focus FoM value
+setting_raw     = False  #Add raw Bayer data to JPEG
 setting_flicker = "50hz" #Flicker avoidance
 setting_hf      = False  #Flip Image horizontally
 setting_vf      = False  #Flip Image vertically
 #Default advanced settings
 setting_USB  = False
-setting_HDMI = False
+setting_HDMI = True
 setting_WiFi = False
 setting_SSH  = False
-setting_VNC  = False
+setting_VNC  = True
 
 
 #GPIO Buttons
@@ -89,7 +89,7 @@ debugging = False #Debugging (print stuff to console)
 
 ### The "real" code beginns here :) ###
 ##Shorten common Variables, Save and apply initial settings & other stuff##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-w = wscreen - wpreview - winfo #Empty space left for the buttons
+winfo = wscreen - wpreview - wmenu #width of info menu on the right
 h = hscreen
 
 setting_flicker_init = setting_flicker
@@ -609,6 +609,176 @@ App = QApplication(sys.argv)
 Menu = Window()
 
 
+##CAMERA##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#Make raspistill command
+def raspistill_command():
+    #Output
+    year = datetime.date.today().year
+    month = datetime.date.today().month
+    if month < 10:
+        arg_output_prefix = setting_output_prefix + str(year) + "0"
+    else:
+        arg_output_prefix = setting_output_prefix + str(year)
+    if setting_raw:
+        arg_output_suffix = setting_output_suffix_raw
+    else:
+        arg_output_suffix = setting_output_suffix_noraw
+    
+    #Arguments
+    arg_needed = "-t 0 -dt -s "
+    
+    arg_preview   = "-p "  + str(wmenu) + ",0," + str(wpreview) + "," + str(h) + " "
+    arg_output    = "-o "  + setting_output_location + "/" + arg_output_prefix + "%d" + arg_output_suffix + "." + setting_encoding + " "
+    arg_encoding  = "-e "  + setting_encoding     + " "
+    arg_mode      = "-md " + str(setting_mode)    + " "
+    arg_quality   = "-q "  + str(setting_quality) + " "
+    arg_thumbnail = "-th " + setting_thumbnail    + " "
+    
+    arg_ISO = "-ISO " + str(setting_ISO) + " "
+    arg_SS  = "-ss "  + str(setting_SS)  + " "
+    arg_AWB = "-awb " + str(setting_AWB) + " "
+    arg_EXP = "-ex "  + str(setting_EXP) + " "
+    arg_EXM = "-mm "  + str(setting_EXM) + " "
+    
+    arg_FoM     = "-fw "
+    arg_raw     = "-r "
+    arg_flicker = "-fli " + str(setting_flicker) + " "
+    arg_hf      = "-hf "
+    arg_vf      = "-vf "
+    
+    
+    #Make Command
+    command  = "raspistill "
+    command += arg_needed
+    command += arg_preview
+    command += arg_output
+    command += arg_encoding
+    command += arg_mode
+    command += arg_quality
+    command += arg_thumbnail
+    command += arg_ISO
+    command += arg_SS
+    command += arg_AWB
+    command += arg_EXP
+    command += arg_EXM
+    if setting_FoM:
+        command += arg_FoM
+    if setting_raw:
+        command += arg_raw
+    command += arg_flicker
+    if setting_hf:
+        command += arg_hf
+    if setting_vf:
+        command += arg_vf
+    #Debugging message
+    if debugging:
+        print("##raspistill command:##")
+        print(command)
+        print("")
+        
+    return command + "&"
+
+#Launch (or) relaunch raspistill. Needs to be run each time camera settings change
+def raspistill():
+    os.system("pkill feh")
+    os.system("pkill raspistill")
+    Menu.resize(wscreen, h)
+    raspistill = raspistill_command()
+    os.system(raspistill)
+    
+raspistill()
+
+#capture image
+def capture():
+    os.system("pkill -USR1 raspistill")
+    update_i_storage()
+    #Debugging message
+    if debugging:
+        print("Image captured")
+
+
+##Image viever##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#Make feh command
+def feh_command():
+    arg_path = setting_output_location + " "
+    arg_geometry = "-x -g " + str(wpreview) + "x" + str(h) + "+" + str(wmenu) + "+0 -. "
+    arg_needed = "-n -d -Y -B black -N --edit "
+    arg_cursor = "-Y "
+    
+    command  = "feh "
+    command += arg_path
+    command += arg_geometry
+    command += arg_needed
+    if cursor_hidden:
+        command += arg_cursor
+    #Debugging message
+    if debugging:
+        print("##feh command:##")
+        print(command)
+        print("")
+    
+    return command + "&"
+
+
+def feh():
+    os.system("pkill raspistill")
+    feh = feh_command()
+    os.system(feh)
+    sleep(1)#Increrase if feh takes long to open
+    Menu.resize(wmenu, h)
+    Menu.activateWindow()
+
+
+##GPIO & Keys##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+keyboard = Controller()
+#Shoot picture button
+def gpio_button_capture_pressed():
+    capture()
+#Simulate the correct Keypresses from GPIO
+def gpio_button_up_pressed():
+    keyboard.press(Key.up)
+    keyboard.release(Key.up)
+def gpio_button_select_pressed():
+    keyboard.press(Key.space)
+    keyboard.release(Key.space)
+    sleep(0.2) #Prevent accidental "double press"
+def gpio_button_down_pressed():
+    keyboard.press(Key.down)
+    keyboard.release(Key.down)
+
+#Test for GPIO button presses
+button_capture.when_pressed = gpio_button_capture_pressed
+button_up.when_pressed      = gpio_button_up_pressed
+button_select.when_pressed  = gpio_button_select_pressed
+button_down.when_pressed    = gpio_button_down_pressed
+
+#Simulate Keypress from QPushButton
+def simulate_alt_tab(): #workaround for now :)
+    alt_tab_delay = 0.1
+    keyboard.press(Key.alt)
+    keyboard.press(Key.tab)
+    sleep(alt_tab_delay)
+    keyboard.release(Key.tab)
+    keyboard.release(Key.alt)
+    sleep(alt_tab_delay)
+def simulate_button_PIC_next_pressed():
+    simulate_alt_tab()
+    keyboard.press(Key.right)
+    keyboard.release(Key.right)
+def simulate_button_PIC_prev_pressed():
+    simulate_alt_tab()
+    keyboard.press(Key.left)
+    keyboard.release(Key.left)
+def simulate_button_PIC_rotr_pressed():
+    simulate_alt_tab()
+    keyboard.press(">")
+    keyboard.release(">")
+def simulate_button_PIC_rotl_pressed():
+    simulate_alt_tab()
+    keyboard.press("<")
+    keyboard.release("<")
+
+
 ##Button pressed actions##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 #Button action Main Menu
 def button_ISO_pressed():
@@ -804,14 +974,15 @@ def checkbox_ADV_VNC_pressed():
         setting_VNC_set(True)
     setting_VNC = not setting_VNC
 
+
 ##Preview label##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-label_preview = Menu.label(w, 0, wpreview, h, "⌛", 60, True)
+label_preview = Menu.label(wmenu, 0, wpreview, h, "⌛", 60, True)
 label_preview.setAlignment(Qt.AlignCenter) #Align
 
 
 ##Create menu##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ydist = 20
-button_w = w - (xdistl + xdistr) * 2
+button_w = wmenu - (xdistl + xdistr) * 2
 button_h = h/8
 button_dist = button_h + h/24
 #Create buttons for Main Menu
@@ -1224,175 +1395,6 @@ def update_i_settings():
 update_i_periodically()
 
 
-##CAMERA##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#Make raspistill command
-def raspistill_command():
-    #Output
-    year = datetime.date.today().year
-    month = datetime.date.today().month
-    if month < 10:
-        arg_output_prefix = setting_output_prefix + str(year) + "0"
-    else:
-        arg_output_prefix = setting_output_prefix + str(year)
-    if setting_raw:
-        arg_output_suffix = setting_output_suffix_raw
-    else:
-        arg_output_suffix = setting_output_suffix_noraw
-    
-    #Arguments
-    arg_needed = "-t 0 -dt -s "
-    
-    arg_preview   = "-p "  + str(w) + ",0," + str(wpreview) + "," + str(h) + " "
-    arg_output    = "-o "  + setting_output_location + "/" + arg_output_prefix + "%d" + arg_output_suffix + "." + setting_encoding + " "
-    arg_encoding  = "-e "  + setting_encoding     + " "
-    arg_mode      = "-md " + str(setting_mode)    + " "
-    arg_quality   = "-q "  + str(setting_quality) + " "
-    arg_thumbnail = "-th " + setting_thumbnail    + " "
-    
-    arg_ISO = "-ISO " + str(setting_ISO) + " "
-    arg_SS  = "-ss "  + str(setting_SS)  + " "
-    arg_AWB = "-awb " + str(setting_AWB) + " "
-    arg_EXP = "-ex "  + str(setting_EXP) + " "
-    arg_EXM = "-mm "  + str(setting_EXM) + " "
-    
-    arg_FoM     = "-fw "
-    arg_raw     = "-r "
-    arg_flicker = "-fli " + str(setting_flicker) + " "
-    arg_hf      = "-hf "
-    arg_vf      = "-vf "
-    
-    
-    #Make Command
-    command  = "raspistill "
-    command += arg_needed
-    command += arg_preview
-    command += arg_output
-    command += arg_encoding
-    command += arg_mode
-    command += arg_quality
-    command += arg_thumbnail
-    command += arg_ISO
-    command += arg_SS
-    command += arg_AWB
-    command += arg_EXP
-    command += arg_EXM
-    if setting_FoM:
-        command += arg_FoM
-    if setting_raw:
-        command += arg_raw
-    command += arg_flicker
-    if setting_hf:
-        command += arg_hf
-    if setting_vf:
-        command += arg_vf
-    #Debugging message
-    if debugging:
-        print("##raspistill command:##")
-        print(command)
-        print("")
-        
-    return command + "&"
-
-#Launch (or) relaunch raspistill. Needs to be run each time camera settings change
-def raspistill():
-    os.system("pkill feh")
-    os.system("pkill raspistill")
-    Menu.resize(wscreen, h)
-    raspistill = raspistill_command()
-    os.system(raspistill)
-
-#capture image
-def capture():
-    os.system("pkill -USR1 raspistill")
-    update_i_storage()
-    #Debugging message
-    if debugging:
-        print("Image captured")
-
-
-##Image viever##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#Make feh command
-def feh_command():
-    arg_path = setting_output_location + " "
-    arg_geometry = "-x -g " + str(wpreview) + "x" + str(h) + "+" + str(w) + "+0 -. "
-    arg_needed = "-n -d -Y -B black -N --edit "
-    arg_cursor = "-Y "
-    
-    command  = "feh "
-    command += arg_path
-    command += arg_geometry
-    command += arg_needed
-    if cursor_hidden:
-        command += arg_cursor
-    #Debugging message
-    if debugging:
-        print("##feh command:##")
-        print(command)
-        print("")
-    
-    return command + "&"
-
-
-def feh():
-    os.system("pkill raspistill")
-    feh = feh_command()
-    os.system(feh)
-    sleep(1)#Increrase if feh takes long to open
-    Menu.resize(w, h)
-    Menu.activateWindow()
-
-
-##GPIO & Keys##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-keyboard = Controller()
-#Shoot picture button
-def gpio_button_capture_pressed():
-    capture()
-#Simulate the correct Keypresses from GPIO
-def gpio_button_up_pressed():
-    keyboard.press(Key.up)
-    keyboard.release(Key.up)
-def gpio_button_select_pressed():
-    keyboard.press(Key.space)
-    keyboard.release(Key.space)
-    sleep(0.2) #Prevent accidental "double press"
-def gpio_button_down_pressed():
-    keyboard.press(Key.down)
-    keyboard.release(Key.down)
-
-#Test for GPIO button presses
-button_capture.when_pressed = gpio_button_capture_pressed
-button_up.when_pressed      = gpio_button_up_pressed
-button_select.when_pressed  = gpio_button_select_pressed
-button_down.when_pressed    = gpio_button_down_pressed
-
-#Simulate Keypress from QPushButton
-def simulate_alt_tab(): #Dirty workaround :)
-    alt_tab_delay = 0.1
-    keyboard.press(Key.alt)
-    keyboard.press(Key.tab)
-    sleep(alt_tab_delay)
-    keyboard.release(Key.tab)
-    keyboard.release(Key.alt)
-    sleep(alt_tab_delay)
-def simulate_button_PIC_next_pressed():
-    simulate_alt_tab()
-    keyboard.press(Key.right)
-    keyboard.release(Key.right)
-def simulate_button_PIC_prev_pressed():
-    simulate_alt_tab()
-    keyboard.press(Key.left)
-    keyboard.release(Key.left)
-def simulate_button_PIC_rotr_pressed():
-    simulate_alt_tab()
-    keyboard.press(">")
-    keyboard.release(">")
-def simulate_button_PIC_rotl_pressed():
-    simulate_alt_tab()
-    keyboard.press("<")
-    keyboard.release("<")
-
-
 ##Run App##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-raspistill() #Preview
 Menu.show()  #show UI
 App.exec()   #Run UI
