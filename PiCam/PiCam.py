@@ -62,10 +62,9 @@ setting_flicker = "50hz" #Flicker avoidance
 setting_hf      = False  #Flip Image horizontally
 setting_vf      = False  #Flip Image vertically
 #Default advanced settings
-setting_USB  = False
-setting_HDMI = True
-setting_WiFi = False
-setting_SSH  = False
+setting_USB  = True
+setting_WiFi = True
+setting_SSH  = True
 setting_VNC  = True
 
 
@@ -168,18 +167,6 @@ def setting_USB_set(state): #Apply USB setting
             print("USB disabled")
 
 setting_USB_set(setting_USB)
-
-def setting_HDMI_set(state): #Apply HDMI setting
-    if state:
-        os.system("sudo /opt/vc/bin/tvservice -p > /dev/null")
-        if debugging:
-            print("HDMI enabled")
-    else:
-        os.system("sudo /opt/vc/bin/tvservice -o > /dev/null")
-        if debugging:
-            print("HDMI disabled")
-
-setting_HDMI_set(setting_HDMI)
 
 def setting_WiFi_set(state): #Apply WiFi setting
     if state:
@@ -616,7 +603,7 @@ if debugging:
     print_settings()
     
 
-##Camera Preview##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+##Camera preview and capture##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 #Make raspistill command
 def raspistill_command():
     #Output
@@ -736,7 +723,7 @@ def feh():
     Menu.activateWindow()
 
 
-##GPIO & Keys##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+##GPIO & simulated keys##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 keyboard = Controller()
 #Shoot picture button
 def gpio_button_capture_pressed():
@@ -776,6 +763,14 @@ def simulate_button_PIC_prev_pressed():
     simulate_alt_tab()
     keyboard.press(Key.left)
     keyboard.release(Key.left)
+def simulate_button_PIC_zi_pressed():
+    simulate_alt_tab()
+    keyboard.press(Key.up)
+    keyboard.release(Key.up)
+def simulate_button_PIC_zo_pressed():
+    simulate_alt_tab()
+    keyboard.press(Key.down)
+    keyboard.release(Key.down)
 def simulate_button_PIC_rotr_pressed():
     simulate_alt_tab()
     keyboard.press(">")
@@ -784,6 +779,12 @@ def simulate_button_PIC_rotl_pressed():
     simulate_alt_tab()
     keyboard.press("<")
     keyboard.release("<")
+def simulate_button_PIC_del_pressed():
+    simulate_alt_tab()
+    keyboard.press(Key.ctrl)
+    keyboard.press(Key.delete)
+    keyboard.release(Key.delete)
+    keyboard.release(Key.ctrl)
 
 
 ##Button pressed actions##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -911,15 +912,23 @@ def button_PIC_next_pressed():
 def button_PIC_prev_pressed():
     simulate_button_PIC_prev_pressed()
     Menu.activateWindow()
+def button_PIC_zi_pressed():
+    simulate_button_PIC_zi_pressed()
+    Menu.activateWindow()
+def button_PIC_zo_pressed():
+    simulate_button_PIC_zo_pressed()
+    Menu.activateWindow()
 def button_PIC_rotr_pressed():
     simulate_button_PIC_rotr_pressed()
     Menu.activateWindow()
 def button_PIC_rotl_pressed():
     simulate_button_PIC_rotl_pressed()
     Menu.activateWindow()
+def button_PIC_del_pressed():
+    simulate_button_PIC_del_pressed()
+    Menu.activateWindow()
 def button_PIC_BAK_pressed():
     visibility_Menu_PIC(False)
-    raspistill()
     visibility_Menu(True)
     
 
@@ -1305,10 +1314,9 @@ checkbox_ADV_dist = checkbox_ADV_h + h/50
 button_ADV_h = h/10
 button_ADV_dist = button_ADV_h + h/50
 checkbox_ADV_USB  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*0, checkbox_w, checkbox_ADV_h, "USB",  18,  setting_USB, checkbox_ADV_USB_pressed,  False)
-checkbox_ADV_HDMI = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*1, checkbox_w, checkbox_ADV_h, "HDMI", 18, setting_HDMI, checkbox_ADV_HDMI_pressed, False)
-checkbox_ADV_WiFi = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*2, checkbox_w, checkbox_ADV_h, "WiFi", 18, setting_WiFi, checkbox_ADV_WiFi_pressed, False)
-checkbox_ADV_SSH  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*3, checkbox_w, checkbox_ADV_h, "SSH",  18,  setting_SSH, checkbox_ADV_SSH_pressed,  False)
-checkbox_ADV_VNC  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*4, checkbox_w, checkbox_ADV_h, "VNC",  18,  setting_VNC, checkbox_ADV_VNC_pressed,  False)
+checkbox_ADV_WiFi = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*1, checkbox_w, checkbox_ADV_h, "WiFi", 18, setting_WiFi, checkbox_ADV_WiFi_pressed, False)
+checkbox_ADV_SSH  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*2, checkbox_w, checkbox_ADV_h, "SSH",  18,  setting_SSH, checkbox_ADV_SSH_pressed,  False)
+checkbox_ADV_VNC  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*3, checkbox_w, checkbox_ADV_h, "VNC",  18,  setting_VNC, checkbox_ADV_VNC_pressed,  False)
 button_ADV_poweroff = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*2, button_w, button_ADV_h, "↴", 30, button_ADV_poweroff_pressed, False)
 button_ADV_quit     = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*1, button_w, button_ADV_h, "✕", 30, button_ADV_quit_pressed,     False)
 button_ADV_BACK     = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*0, button_w, button_ADV_h, "↩", 32, button_ADV_BACK_pressed,     False)
@@ -1316,7 +1324,6 @@ button_ADV_BACK     = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_
 def visibility_Menu_ADV(visibility):
     if visibility:
         checkbox_ADV_USB.show()
-        checkbox_ADV_HDMI.show()
         checkbox_ADV_WiFi.show()
         checkbox_ADV_SSH.show()
         checkbox_ADV_VNC.show()
@@ -1326,7 +1333,6 @@ def visibility_Menu_ADV(visibility):
         button_ADV_BACK.setFocus() #Set Focus
     else:
         checkbox_ADV_USB.hide()
-        checkbox_ADV_HDMI.hide()
         checkbox_ADV_WiFi.hide()
         checkbox_ADV_SSH.hide()
         checkbox_ADV_VNC.hide()
@@ -1336,28 +1342,37 @@ def visibility_Menu_ADV(visibility):
 
 
 ##Create PIC menu##────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-button_PIC_h = h/8
-button_PIC_dist = button_PIC_h + h/24
+button_PIC_h = h/12
+button_PIC_dist = button_PIC_h + h/50
 #Create buttons for PIC (Metering) Menu
 button_PIC_next = Menu.button(xdistl, ydist + button_PIC_dist*0, button_w, button_PIC_h, "►", 20, button_PIC_next_pressed,   False)
 button_PIC_prev = Menu.button(xdistl, ydist + button_PIC_dist*1, button_w, button_PIC_h, "◄", 20, button_PIC_prev_pressed,   False)
-button_PIC_rotr = Menu.button(xdistl, ydist + button_PIC_dist*2, button_w, button_PIC_h, "↻", 30, button_PIC_rotr_pressed,   False)
-button_PIC_rotl = Menu.button(xdistl, ydist + button_PIC_dist*3, button_w, button_PIC_h, "↺", 30, button_PIC_rotl_pressed,   False)
+button_PIC_zi   = Menu.button(xdistl, ydist + button_PIC_dist*2, button_w, button_PIC_h, "+", 28, button_PIC_zi_pressed,     False)
+button_PIC_zo   = Menu.button(xdistl, ydist + button_PIC_dist*3, button_w, button_PIC_h, "-", 30, button_PIC_zo_pressed,     False)
+button_PIC_rotr = Menu.button(xdistl, ydist + button_PIC_dist*4, button_w, button_PIC_h, "↻", 26, button_PIC_rotr_pressed,   False)
+button_PIC_rotl = Menu.button(xdistl, ydist + button_PIC_dist*5, button_w, button_PIC_h, "↺", 26, button_PIC_rotl_pressed,   False)
+button_PIC_del  = Menu.button(xdistl, ydist + button_PIC_dist*6, button_w, button_PIC_h, "♺", 26, button_PIC_del_pressed,    False)
 button_PIC_BAK  = Menu.button(xdistl,  h - ydist - button_PIC_h, button_w, button_PIC_h, "↩", 32, button_PIC_BAK_pressed,    False)
 #Change visibility of PIC Menu
 def visibility_Menu_PIC(visibility):
     if visibility:
         button_PIC_next.show()
         button_PIC_prev.show()
+        button_PIC_zi.show()
+        button_PIC_zo.show()
         button_PIC_rotr.show()
         button_PIC_rotl.show()
+        button_PIC_del.show()
         button_PIC_BAK.show()
         button_PIC_next.setFocus() #Set Focus
     else:
         button_PIC_next.hide()
         button_PIC_prev.hide()
+        button_PIC_zi.hide()
+        button_PIC_zo.hide()
         button_PIC_rotr.hide()
         button_PIC_rotl.hide()
+        button_PIC_del.hide()
         button_PIC_BAK.hide()
 
 
