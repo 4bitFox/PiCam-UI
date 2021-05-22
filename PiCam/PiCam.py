@@ -46,7 +46,7 @@ setting_output_suffix_raw = "R"  #Filename suffix when RAW enabled
 setting_encoding = "jpg"         #Encoding of picture taken
 setting_mode = 3                 #Sensor mode
 setting_quality = 90             #Compression quality
-setting_thumbnail = "64,48,35"   #Thumbnail settings ("width,height,quality")
+setting_thumbnail = "64,48,35" #Thumbnail settings ("width,height,quality")
 
 
 #Default Camera settings
@@ -66,6 +66,9 @@ setting_USB  = True
 setting_WiFi = True
 setting_SSH  = True
 setting_VNC  = True
+
+#Artist
+setting_photographer = "Fabian C." #Name of photographer (for EXIF Artist)
 
 
 #GPIO Buttons
@@ -640,6 +643,8 @@ def raspistill_command():
     arg_hf      = "-hf "
     arg_vf      = "-vf "
     
+    arg_artist = "-x IFD1.Artist='" + setting_photographer + "'"
+    
     
     #Make Command
     command  = "raspistill "
@@ -664,6 +669,7 @@ def raspistill_command():
         command += arg_hf
     if setting_vf:
         command += arg_vf
+    command += arg_artist
     #Debugging message
     if debugging:
         print("##raspistill command:##")
