@@ -1179,15 +1179,15 @@ def visibility_Menu_SS_3(visibility):
 button_AWB_h = h/12
 button_AWB_dist = (h - 2*ydist - button_AWB_h)/8
 #Create buttons for AWB Menu
-button_AWB_auto         = Menu.button(xdistl, ydist + button_AWB_dist*0, button_w, button_AWB_h, "AUTO", 18, lambda: button_AWB_any_act("auto"),         False)
-button_AWB_sunlight     = Menu.button(xdistl, ydist + button_AWB_dist*1, button_w, button_AWB_h,    "☀", 22, lambda: button_AWB_any_act("sun"),          False)
-button_AWB_cloudy       = Menu.button(xdistl, ydist + button_AWB_dist*2, button_w, button_AWB_h,    "☁", 22, lambda: button_AWB_any_act("cloud"),        False)
-button_AWB_shade        = Menu.button(xdistl, ydist + button_AWB_dist*3, button_w, button_AWB_h,    "▧", 20, lambda: button_AWB_any_act("shade"),        False)
-button_AWB_tungsten     = Menu.button(xdistl, ydist + button_AWB_dist*4, button_w, button_AWB_h,    "W", 20, lambda: button_AWB_any_act("tungsten"),     False)
-button_AWB_fluorescent  = Menu.button(xdistl, ydist + button_AWB_dist*5, button_w, button_AWB_h,    "F", 20, lambda: button_AWB_any_act("fluorescent"),  False)
-button_AWB_incandescent = Menu.button(xdistl, ydist + button_AWB_dist*6, button_w, button_AWB_h,    "I", 20, lambda: button_AWB_any_act("incandescent"), False)
-button_AWB_flash        = Menu.button(xdistl, ydist + button_AWB_dist*7, button_w, button_AWB_h,    "⚡", 20, lambda: button_AWB_any_act("flash"),        False)
-button_AWB_horizon      = Menu.button(xdistl, ydist + button_AWB_dist*8, button_w, button_AWB_h,    "♎", 20, lambda: button_AWB_any_act("horizon"),      False)
+button_AWB_auto         = Menu.button(xdistl, ydist + button_AWB_dist*0, button_w, button_AWB_h,  "AUTO", 18, lambda: button_AWB_any_act("auto"),         False)
+button_AWB_sunlight     = Menu.button(xdistl, ydist + button_AWB_dist*1, button_w, button_AWB_h,     "☀", 22, lambda: button_AWB_any_act("sun"),          False)
+button_AWB_cloudy       = Menu.button(xdistl, ydist + button_AWB_dist*2, button_w, button_AWB_h,     "☁", 22, lambda: button_AWB_any_act("cloud"),        False)
+button_AWB_shade        = Menu.button(xdistl, ydist + button_AWB_dist*3, button_w, button_AWB_h,     "⛱️", 20, lambda: button_AWB_any_act("shade"),        False)
+button_AWB_tungsten     = Menu.button(xdistl, ydist + button_AWB_dist*4, button_w, button_AWB_h, " 💡 W", 18, lambda: button_AWB_any_act("tungsten"),     False)
+button_AWB_fluorescent  = Menu.button(xdistl, ydist + button_AWB_dist*5, button_w, button_AWB_h,  "💡 F", 18, lambda: button_AWB_any_act("fluorescent"),  False)
+button_AWB_incandescent = Menu.button(xdistl, ydist + button_AWB_dist*6, button_w, button_AWB_h, "💡 I ", 18, lambda: button_AWB_any_act("incandescent"), False)
+button_AWB_flash        = Menu.button(xdistl, ydist + button_AWB_dist*7, button_w, button_AWB_h, " 💡 ⚡", 18, lambda: button_AWB_any_act("flash"),        False)
+button_AWB_horizon      = Menu.button(xdistl, ydist + button_AWB_dist*8, button_w, button_AWB_h,    "🛣️", 20, lambda: button_AWB_any_act("horizon"),      False)
 #Change visibility of AWB Menu
 def visibility_Menu_AWB(visibility):
     if visibility:
@@ -1247,11 +1247,11 @@ button_EXP_auto      = Menu.button(xdistl, ydist + button_EXP_dist*0, button_w, 
 button_EXP_night     = Menu.button(xdistl, ydist + button_EXP_dist*1, button_w, button_EXP_h,   " ☾", 20, lambda: button_EXP_any_act("night"),     False)
 button_EXP_backlight = Menu.button(xdistl, ydist + button_EXP_dist*2, button_w, button_EXP_h,   "⚞I", 22, lambda: button_EXP_any_act("backlight"), False)
 button_EXP_spotlight = Menu.button(xdistl, ydist + button_EXP_dist*3, button_w, button_EXP_h,    "☄", 22, lambda: button_EXP_any_act("spotlight"), False)
-button_EXP_sports    = Menu.button(xdistl, ydist + button_EXP_dist*4, button_w, button_EXP_h,    "⚘", 22, lambda: button_EXP_any_act("sports"),    False)
+button_EXP_sports    = Menu.button(xdistl, ydist + button_EXP_dist*4, button_w, button_EXP_h,    "🚴", 22, lambda: button_EXP_any_act("sports"),    False)
 button_EXP_snow      = Menu.button(xdistl, ydist + button_EXP_dist*5, button_w, button_EXP_h,    "☃", 22, lambda: button_EXP_any_act("snow"),      False)
-button_EXP_beach     = Menu.button(xdistl, ydist + button_EXP_dist*6, button_w, button_EXP_h,    "≃", 22, lambda: button_EXP_any_act("beach"),     False)
-button_EXP_fireworks = Menu.button(xdistl, ydist + button_EXP_dist*7, button_w, button_EXP_h,    "≛", 22, lambda: button_EXP_any_act("fireworks"), False)
-button_EXP_antishake = Menu.button(xdistl, ydist + button_EXP_dist*8, button_w, button_EXP_h,  "░▒▓",  14, lambda: button_EXP_any_act("antishake"), False)
+button_EXP_beach     = Menu.button(xdistl, ydist + button_EXP_dist*6, button_w, button_EXP_h,    "🏖️", 20, lambda: button_EXP_any_act("beach"),     False)
+button_EXP_fireworks = Menu.button(xdistl, ydist + button_EXP_dist*7, button_w, button_EXP_h,    "🎆", 20, lambda: button_EXP_any_act("fireworks"), False)
+button_EXP_antishake = Menu.button(xdistl, ydist + button_EXP_dist*8, button_w, button_EXP_h,    "👋", 22, lambda: button_EXP_any_act("antishake"), False)
 #Cange visibility of EXP Mode Menu
 def visibility_Menu_EXP_Mode(visibility):
     if visibility:
@@ -1289,7 +1289,7 @@ checkbox_ETC_flicker = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*2, checkb
 checkbox_ETC_hf      = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*3, checkbox_w, checkbox_ETC_h,  "HF", 18, setting_hf,                checkbox_ETC_hf_pressed,      False)
 checkbox_ETC_vf      = Menu.checkbox(xdistl, ydist + checkbox_ETC_dist*4, checkbox_w, checkbox_ETC_h,  "VF", 18, setting_vf,                checkbox_ETC_vf_pressed,      False)
 button_ETC_ADV       = Menu.button(xdistl, h - ydist - button_ETC_h - button_ETC_dist*2, button_w, button_ETC_h, "⚒",    24, button_ETC_ADV_pressed,  False)
-button_ETC_PIC       = Menu.button(xdistl, h - ydist - button_ETC_h - button_ETC_dist*1, button_w, button_ETC_h, "PIC", 24, button_ETC_PIC_pressed,  False)
+button_ETC_PIC       = Menu.button(xdistl, h - ydist - button_ETC_h - button_ETC_dist*1, button_w, button_ETC_h, "🏖️", 24, button_ETC_PIC_pressed,  False)
 button_ETC_BACK      = Menu.button(xdistl, h - ydist - button_ETC_h - button_ETC_dist*0, button_w, button_ETC_h,   "↩", 32, button_ETC_BACK_pressed, False)
 #Change visibility of ETC Menu
 def visibility_Menu_ETC(visibility):
@@ -1351,14 +1351,14 @@ def visibility_Menu_ADV(visibility):
 button_PIC_h = h/12
 button_PIC_dist = button_PIC_h + h/50
 #Create buttons for PIC (Metering) Menu
-button_PIC_next = Menu.button(xdistl, ydist + button_PIC_dist*0, button_w, button_PIC_h, "►", 20, button_PIC_next_pressed,   False)
-button_PIC_prev = Menu.button(xdistl, ydist + button_PIC_dist*1, button_w, button_PIC_h, "◄", 20, button_PIC_prev_pressed,   False)
-button_PIC_zi   = Menu.button(xdistl, ydist + button_PIC_dist*2, button_w, button_PIC_h, "+", 28, button_PIC_zi_pressed,     False)
-button_PIC_zo   = Menu.button(xdistl, ydist + button_PIC_dist*3, button_w, button_PIC_h, "-", 30, button_PIC_zo_pressed,     False)
-button_PIC_rotr = Menu.button(xdistl, ydist + button_PIC_dist*4, button_w, button_PIC_h, "↻", 26, button_PIC_rotr_pressed,   False)
-button_PIC_rotl = Menu.button(xdistl, ydist + button_PIC_dist*5, button_w, button_PIC_h, "↺", 26, button_PIC_rotl_pressed,   False)
-button_PIC_del  = Menu.button(xdistl, ydist + button_PIC_dist*6, button_w, button_PIC_h, "♺", 26, button_PIC_del_pressed,    False)
-button_PIC_BAK  = Menu.button(xdistl,  h - ydist - button_PIC_h, button_w, button_PIC_h, "↩", 32, button_PIC_BAK_pressed,    False)
+button_PIC_next = Menu.button(xdistl, ydist + button_PIC_dist*0, button_w, button_PIC_h,    "►", 20, button_PIC_next_pressed,   False)
+button_PIC_prev = Menu.button(xdistl, ydist + button_PIC_dist*1, button_w, button_PIC_h,    "◄", 20, button_PIC_prev_pressed,   False)
+button_PIC_zi   = Menu.button(xdistl, ydist + button_PIC_dist*2, button_w, button_PIC_h, "🔎 +", 20, button_PIC_zi_pressed,     False)
+button_PIC_zo   = Menu.button(xdistl, ydist + button_PIC_dist*3, button_w, button_PIC_h, "🔎 -", 20, button_PIC_zo_pressed,     False)
+button_PIC_rotr = Menu.button(xdistl, ydist + button_PIC_dist*4, button_w, button_PIC_h,    "↻", 26, button_PIC_rotr_pressed,   False)
+button_PIC_rotl = Menu.button(xdistl, ydist + button_PIC_dist*5, button_w, button_PIC_h,    "↺", 26, button_PIC_rotl_pressed,   False)
+button_PIC_del  = Menu.button(xdistl, ydist + button_PIC_dist*6, button_w, button_PIC_h,    "🚮", 20, button_PIC_del_pressed,    False)
+button_PIC_BAK  = Menu.button(xdistl,  h - ydist - button_PIC_h, button_w, button_PIC_h,    "↩", 32, button_PIC_BAK_pressed,    False)
 #Change visibility of PIC Menu
 def visibility_Menu_PIC(visibility):
     if visibility:
@@ -1391,14 +1391,15 @@ label_i_hs = h/30
 label_i_h  = label_i_ht + label_i_hs
 label_i_dist = label_i_h + ydist/2
 #Create labels for Info bar top
-label_it_battery           = Menu.label(label_xdistl, ydist + label_i_hs*0              + label_i_dist*0, label_w, label_i_ht, "BAT",                16, True)
+label_it_battery           = Menu.label(label_xdistl, ydist + label_i_hs*0              + label_i_dist*0, label_w, label_i_ht, "🔋",                16, True)
 label_is_battery           = Menu.label(label_xdistl, ydist + label_i_hs*0 + label_i_ht + label_i_dist*0, label_w, label_i_hs, battery(),                  10, True)
-label_it_storage           = Menu.label(label_xdistl, ydist + label_i_hs*0              + label_i_dist*1, label_w, label_i_ht, "SD",                 16, True)
-label_is_storage_total     = Menu.label(label_xdistl, ydist + label_i_hs*0 + label_i_ht + label_i_dist*1, label_w, label_i_hs, fs_stat("total"),     10, True)
-label_it_storage_total     = Menu.label(label_xdistl, ydist + label_i_hs*1 + label_i_ht + label_i_dist*1, label_w, label_i_hs, "total",              10, True)
-label_is_storage_available = Menu.label(label_xdistl, ydist + label_i_hs*2 + label_i_ht + label_i_dist*1, label_w, label_i_hs, fs_stat("available"), 10, True)
-label_it_storage_available = Menu.label(label_xdistl, ydist + label_i_hs*3 + label_i_ht + label_i_dist*1, label_w, label_i_hs, "avail.",          10, True)
+label_it_storage           = Menu.label(label_xdistl, ydist + label_i_hs*0              + label_i_dist*1.8, label_w, label_i_ht, "💾",                 16, True)
+label_is_storage_total     = Menu.label(label_xdistl, ydist + label_i_hs*0 + label_i_ht + label_i_dist*1.8, label_w, label_i_hs, fs_stat("total"),     10, True)
+label_it_storage_total     = Menu.label(label_xdistl, ydist + label_i_hs*1 + label_i_ht + label_i_dist*1.8, label_w, label_i_hs, "total",              10, True)
+label_is_storage_available = Menu.label(label_xdistl, ydist + label_i_hs*2 + label_i_ht + label_i_dist*1.8, label_w, label_i_hs, fs_stat("available"), 10, True)
+label_it_storage_available = Menu.label(label_xdistl, ydist + label_i_hs*3 + label_i_ht + label_i_dist*1.8, label_w, label_i_hs, "avail.",          10, True)
 #Create labels for Info bar top
+label_it_CAM = Menu.label(label_xdistl, h - ydist - label_i_hs*1 - label_i_h - label_i_ht - label_i_dist*3, label_w, label_i_ht, "📷",             18, True)
 label_it_ISO = Menu.label(label_xdistl, h - ydist - label_i_hs*1 - label_i_h              - label_i_dist*3, label_w, label_i_ht, "ISO",            16, True)
 label_is_ISO = Menu.label(label_xdistl, h - ydist - label_i_hs*1 + label_i_ht - label_i_h - label_i_dist*3, label_w, label_i_hs, setting_ISO_hr(), 10, True)
 label_it_SS  = Menu.label(label_xdistl, h - ydist - label_i_hs*1 - label_i_h              - label_i_dist*2, label_w, label_i_ht, "SS",             16, True)
