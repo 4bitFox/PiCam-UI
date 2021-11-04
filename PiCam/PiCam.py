@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-###  Copyright (C) 2021 4bitFox  ###
+###  Copyright (C) 2021 4bitFox / Fabian C.  ###
 
 
 #Basic portable Camera UI for the Raspberry Pi.
@@ -40,7 +40,7 @@ wmenu    = 100 #Menu with (left)
 
 #Output settings
 setting_output_location = "/home/pi/Pictures" #Where to store pictures
-setting_output_prefix = "IMG_"   #Filename prefix
+setting_output_prefix = "FCM_"   #Filename prefix
 setting_output_suffix_noraw = "" #Filename suffix when RAW disabled
 setting_output_suffix_raw = "R"  #Filename suffix when RAW enabled
 setting_encoding = "jpg"         #Encoding of picture taken
@@ -63,6 +63,7 @@ setting_hf      = False  #Flip Image horizontally
 setting_vf      = False  #Flip Image vertically
 #Default advanced settings
 setting_USB  = True
+setting_HDMI = True
 setting_WiFi = True
 setting_SSH  = True
 setting_VNC  = True
@@ -73,10 +74,10 @@ setting_photographer = "Fabian C." #Name of photographer (for EXIF Artist)
 
 #GPIO Buttons
 #If you use buttons connected to GPIO, you can set the pin numbers here:
-button_capture = Button(26) #Take a photo
-button_up      = Button(16) #Move up in menu
-button_select  = Button(20) #Select in menu
-button_down    = Button(21) #Move down in menu
+button_capture = Button(5) #Take a photo
+button_up      = Button(13) #Move up in menu
+button_select  = Button(26) #Select in menu
+button_down    = Button(19) #Move down in menu
 
 #Hardware
 hw_battery = True #Enable battery. You have change the "battery()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
@@ -86,7 +87,7 @@ hw_utc = True #Enable UTC. You have change the "utc()" function yourself if you 
 title = "PiCam"
 cursor_hidden = True
 style = "line-keys" #How the UI looks. You can use "boxes", "line", "line-keys" or "line-touch"
-debugging = False #Debugging (print stuff to console)
+debugging = True #Debugging (print stuff to console)
 
 
 ###Code beginns here :)###
@@ -170,6 +171,18 @@ def setting_USB_set(state): #Apply USB setting
             print("USB disabled")
 
 setting_USB_set(setting_USB)
+
+def setting_HDMI_set(state): #Apply HDMI setting
+    if state:
+        os.system("sudo vcgencmd display_power 1")
+        if debugging:
+            print("HDMI enabled")
+    else:
+        os.system("sudo vcgencmd display_power 0")
+        if debugging:
+            print("HDMI disabled")
+
+setting_HDMI_set(setting_HDMI)
 
 def setting_WiFi_set(state): #Apply WiFi setting
     if state:
@@ -1320,9 +1333,10 @@ checkbox_ADV_dist = checkbox_ADV_h + h/50
 button_ADV_h = h/10
 button_ADV_dist = button_ADV_h + h/50
 checkbox_ADV_USB  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*0, checkbox_w, checkbox_ADV_h, "USB",  18,  setting_USB, checkbox_ADV_USB_pressed,  False)
-checkbox_ADV_WiFi = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*1, checkbox_w, checkbox_ADV_h, "WiFi", 18, setting_WiFi, checkbox_ADV_WiFi_pressed, False)
-checkbox_ADV_SSH  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*2, checkbox_w, checkbox_ADV_h, "SSH",  18,  setting_SSH, checkbox_ADV_SSH_pressed,  False)
-checkbox_ADV_VNC  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*3, checkbox_w, checkbox_ADV_h, "VNC",  18,  setting_VNC, checkbox_ADV_VNC_pressed,  False)
+checkbox_ADV_HDMI  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*1, checkbox_w, checkbox_ADV_h, "HDMI", 18, setting_HDMI, checkbox_ADV_HDMI_pressed, False)
+checkbox_ADV_WiFi = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*2, checkbox_w, checkbox_ADV_h, "WiFi", 18, setting_WiFi, checkbox_ADV_WiFi_pressed, False)
+checkbox_ADV_SSH  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*3, checkbox_w, checkbox_ADV_h, "SSH",  18,  setting_SSH, checkbox_ADV_SSH_pressed,  False)
+checkbox_ADV_VNC  = Menu.checkbox(xdistl, ydist + checkbox_ADV_dist*4, checkbox_w, checkbox_ADV_h, "VNC",  18,  setting_VNC, checkbox_ADV_VNC_pressed,  False)
 button_ADV_poweroff = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*2, button_w, button_ADV_h, "↴", 30, button_ADV_poweroff_pressed, False)
 button_ADV_quit     = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*1, button_w, button_ADV_h, "✕", 30, button_ADV_quit_pressed,     False)
 button_ADV_BACK     = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_dist*0, button_w, button_ADV_h, "↩", 32, button_ADV_BACK_pressed,     False)
@@ -1330,6 +1344,7 @@ button_ADV_BACK     = Menu.button(xdistl, h - ydist - button_ADV_h - button_ADV_
 def visibility_Menu_ADV(visibility):
     if visibility:
         checkbox_ADV_USB.show()
+        checkbox_ADV_HDMI.show()
         checkbox_ADV_WiFi.show()
         checkbox_ADV_SSH.show()
         checkbox_ADV_VNC.show()
@@ -1339,6 +1354,7 @@ def visibility_Menu_ADV(visibility):
         button_ADV_BACK.setFocus() #Set Focus
     else:
         checkbox_ADV_USB.hide()
+        checkbox_ADV_HDMI.hide()
         checkbox_ADV_WiFi.hide()
         checkbox_ADV_SSH.hide()
         checkbox_ADV_VNC.hide()
