@@ -10,6 +10,12 @@ Images can be viewed with feh.
 It is verry likely that you'll have to make changes in the code to make it work for your hardware and needs.
 For example:
 - Screen and Preview resolution
+```py
+wscreen  = 800 #Screen width
+hscreen  = 480 #Screen height
+wpreview = 640 #Preview width (https://andrew.hedges.name/experiments/aspect_ratio/)
+wmenu    = 100 #Menu with (left)
+```
   - Font size
 - Default settings
 - Hardware integration:
