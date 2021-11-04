@@ -62,16 +62,8 @@ setting_VNC  = True
 setting_photographer = "YOUR NAME HERE" #Name of photographer (for EXIF Artist)
 
 
-#GPIO Buttons
-#If you use buttons connected to GPIO, you can set the pin numbers here:
-button_capture = Button(5) #Take a photo
-button_up      = Button(13) #Move up in menu
-button_select  = Button(26) #Select in menu
-button_down    = Button(19) #Move down in menu
 
-#Hardware
-hw_battery = False #Enable battery. You have change the "battery()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
-hw_utc = False #Enable UTC. You have change the "utc()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
+
 
 #Other
 title = "PiCam"
@@ -81,10 +73,20 @@ debugging = False #Debugging (print stuff to console)
 ```
 - Hardware integration:
   - GPIO Pins
-    - Shutter button
-    - Navigation buttons
-  - Code for Battery level
-  - Code for RTC
+```py
+#GPIO Buttons
+#If you use buttons connected to GPIO, you can set the pin numbers here:
+button_capture = Button(5) #Take a photo
+button_up      = Button(13) #Move up in menu
+button_select  = Button(26) #Select in menu
+button_down    = Button(19) #Move down in menu
+```
+  - Battery and RTC
+```py
+#Hardware
+hw_battery = False #Enable battery. You have change the "battery()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
+hw_utc = False #Enable UTC. You have change the "utc()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
+```
 
 Script:
 https://raw.githubusercontent.com/4bitFox/PiCam-UI/main/PiCam/PiCam.py
