@@ -21,3 +21,15 @@ For example:
 
 Script:
 https://raw.githubusercontent.com/4bitFox/PiCam-UI/main/PiCam/PiCam.py
+
+### Hardware I personally use:
+- Raspberry Pi 4 Model B: https://www.raspberrypi.org/products/raspberry-pi-4-model-b/
+- Raspberry Pi HQ Camera: https://www.raspberrypi.org/products/raspberry-pi-high-quality-camera/
+- Waveshare 4.3" DSI LCD: https://www.waveshare.com/4.3inch-DSI-LCD.htm
+- PiSugar 2 Pro: https://www.tindie.com/products/pisugar/pisugar2-pro-battery-for-raspberry-pi-3b3b4b/
+
+And of course:
+- C & CS Mount lenses
+- Some generic push-buttons
+- A case thet I 3D printed
+  - Screws & Glue
