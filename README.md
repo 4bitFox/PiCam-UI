@@ -87,6 +87,22 @@ button_down    = Button(19) #Move down in menu
 hw_battery = False #Enable battery. You have change the "battery()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
 hw_utc = False #Enable UTC. You have change the "utc()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
 ```
+```py
+def battery(): #Get battery level in %
+    if hw_battery:
+        battery = os.popen("echo get battery | netcat -q 0 127.0.0.1 8423 | sed s/[^0-9.]*//g").read()
+        battery = battery.split(".")[0].strip() + "%"
+        return battery
+    else:
+        return "N/A"
+```
+```py
+def utc(): #Set System time from UTC and update time from internet if connected
+    time = 300
+    Timer(time, utc).start() #Run function periodically
+    os.system("echo rtc_web | netcat -q 0 127.0.0.1 8423 > /dev/null 2>&1 &")
+    os.system("sleep 5 && echo rtc_rtc2pi | netcat -q 0 127.0.0.1 8423 > /dev/null &")
+```
 
 Script:
 https://raw.githubusercontent.com/4bitFox/PiCam-UI/main/PiCam/PiCam.py
