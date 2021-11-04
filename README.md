@@ -17,6 +17,15 @@ wpreview = 640 #Preview width (https://andrew.hedges.name/experiments/aspect_rat
 wmenu    = 100 #Menu with (left)
 ```
   - Font size
+```py
+#                                                                               Font size
+#                                                                                  ▼▼
+button_ISO = Menu.button(xdistl, ydist + button_dist*0, button_w, button_h, "ISO", 26, button_ISO_pressed, True)
+button_SS  = Menu.button(xdistl, ydist + button_dist*1, button_w, button_h,  "SS", 26,  button_SS_pressed, True)
+button_AWB = Menu.button(xdistl, ydist + button_dist*2, button_w, button_h, "AWB", 26, button_AWB_pressed, True)
+button_EXP = Menu.button(xdistl, ydist + button_dist*3, button_w, button_h, "EXP", 26, button_EXP_pressed, True)
+button_ETC = Menu.button(xdistl,  h - ydist - button_h, button_w, button_h,   "⚙", 30, button_ETC_pressed, True)
+```
 - Default settings
 - Hardware integration:
   - GPIO Pins
