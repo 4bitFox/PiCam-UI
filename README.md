@@ -16,7 +16,7 @@ hscreen  = 480 #Screen height
 wpreview = 640 #Preview width (https://andrew.hedges.name/experiments/aspect_ratio/)
 wmenu    = 100 #Menu with (left)
 ```
-  - Font size
+  - Font size (adjust if you changed some of the above)
 ```py
 #                                                                               Font size
 #                                                                                  ▼▼
@@ -27,6 +27,58 @@ button_EXP = Menu.button(xdistl, ydist + button_dist*3, button_w, button_h, "EXP
 button_ETC = Menu.button(xdistl,  h - ydist - button_h, button_w, button_h,   "⚙", 30, button_ETC_pressed, True)
 ```
 - Default settings
+```py
+#Output settings
+setting_output_location = "/home/pi/Pictures" #Where to store pictures
+setting_output_prefix = "FCM_"   #Filename prefix
+setting_output_suffix_noraw = "" #Filename suffix when RAW disabled
+setting_output_suffix_raw = "R"  #Filename suffix when RAW enabled
+setting_encoding = "jpg"         #Encoding of picture taken
+setting_mode = 3                 #Sensor mode
+setting_quality = 90             #Compression quality
+setting_thumbnail = "64,48,35" #Thumbnail settings ("width,height,quality")
+
+
+#Default Camera settings
+setting_ISO = 0        #ISO
+setting_AWB = "auto"   #Auto White Balance
+setting_SS  = 0        #Shutter Speed
+setting_EXP = "auto"   #Exposure Mode
+setting_EXM = "matrix" #Exposure Metering
+#Default additional settings
+setting_FoM     = False  #Display focus FoM value
+setting_raw     = False  #Add raw Bayer data to JPEG
+setting_flicker = "50hz" #Flicker avoidance
+setting_hf      = False  #Flip Image horizontally
+setting_vf      = False  #Flip Image vertically
+#Default advanced settings
+setting_USB  = True
+setting_HDMI = True
+setting_WiFi = True
+setting_SSH  = True
+setting_VNC  = True
+
+#Artist
+setting_photographer = "YOUR NAME HERE" #Name of photographer (for EXIF Artist)
+
+
+#GPIO Buttons
+#If you use buttons connected to GPIO, you can set the pin numbers here:
+button_capture = Button(5) #Take a photo
+button_up      = Button(13) #Move up in menu
+button_select  = Button(26) #Select in menu
+button_down    = Button(19) #Move down in menu
+
+#Hardware
+hw_battery = False #Enable battery. You have change the "battery()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
+hw_utc = False #Enable UTC. You have change the "utc()" function yourself if you use something different than a pisugar: https://github.com/PiSugar/PiSugar/wiki/PiSugar-Power-Manager-(Software)
+
+#Other
+title = "PiCam"
+cursor_hidden = True
+style = "line-keys" #How the UI looks. You can use "boxes", "line", "line-keys" or "line-touch"
+debugging = False #Debugging (print stuff to console)
+```
 - Hardware integration:
   - GPIO Pins
     - Shutter button
